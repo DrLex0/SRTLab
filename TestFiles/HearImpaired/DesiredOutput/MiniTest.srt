@@ -34,3 +34,12 @@ make lunch soon.
 - We're sorry.
 Your call cannot be completed as dialed.
 
+9
+01:16:49,177 --> 01:16:53,014
+This tool has
+one purpose, and one purpose only:
+
+10
+01:16:53,177 --> 01:16:55,014
+To obliterate crappy SRT files.
+

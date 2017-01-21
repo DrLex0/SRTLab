@@ -1,0 +1,51 @@
+1
+00:00:10,000 --> 00:00:13,000
+This is a simple file that almost looks like ASCII
+
+2
+00:00:27,183 --> 00:00:31,416
+However, somewhere down below I'll sneak in
+some accents that sometimes occur in English
+
+3
+00:01:27,183 --> 00:01:31,416
+Blah blah
+
+4
+00:02:27,183 --> 00:02:31,416
+Nothing to see here
+
+5
+00:03:27,183 --> 00:03:31,416
+I got a bad feeling about this
+
+6
+00:04:27,183 --> 00:04:31,416
+What good is a phone call
+if your mouth has been filled with CGI
+
+7
+00:05:27,183 --> 00:05:31,416
+It is time to kick ass and chew bubble gum
+And I'm all out of ass
+
+8
+00:06:27,183 --> 00:06:31,416
+[CHEWING SOUNDS]
+
+9
+00:07:27,183 --> 00:07:31,416
+Here it comes
+
+10
+00:08:27,183 --> 00:08:31,416
+I got a serious case of déjà vu here
+
+11
+00:09:27,183 --> 00:09:31,416
+Boy, wasn't that exciting
+
+11
+00:10:27,183 --> 00:10:31,416
+That's all folks!
+
