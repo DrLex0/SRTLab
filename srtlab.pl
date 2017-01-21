@@ -9,8 +9,9 @@
 # Version 0.94 (2011/08): improved hearing-aid filtering
 # Version 0.95 (2011/09): added extra hearing-aid filtering mode
 # Version 0.96 (2012/07): overlap detection and removal
+# Version 0.97 (2014/XX): URL removal, even more robust against poor formatting, WORK IN PROGRESS
 #
-# Copyright (C) 2012  Alexander Thomas
+# Copyright (C) 2014  Alexander Thomas
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,9 +29,41 @@
 use strict;
 use warnings;
 
-my $VERSION = 0.96;
+my $VERSION = "0.97a";
 
 # TODO: improve handling of encodings and allow to override input encoding detection.
+# FIXME: -HH breaks some subs that happen to end with a colon
+#   for instance: "one purpose, and one purpose only:\n\n" will lose everything after the comma
+#  -> Proposal: split subs in separate lines and process per line instead of attempting
+#     to write regexes that work across the entire sub, also make abstraction of $LE:
+#     process everything internally with \n and render with $LE.
+#  The whole H option is dodgy anyway because people keep on inventing new lay-outs for these
+#     hearing-aid annotations instead of using a single standard. I imagine this must also be
+#     terribly annoying to the people with hearing problems who have to get used to each
+#     different lay-out. Therefore more advanced proposal:
+#  Ideally, the script should be able to figure out the particular lay-out automatically.
+# These lay-outs consist of two major parts: 1. annotation of sounds, 2. persons speaking,
+#   and often they will also contain 3. music lyrics: if you're lucky, indicated with ♪ symbol,
+#   also sometimes with ~ instead. Proposal: first run through the entire file and check for
+#   every part which formatting is most likely used, then do the actual destruction.
+# Only make it optional to leave lyrics, the rest must be fully automatic.
+# Some flavours I have seen:
+# For noises:
+#  [CLEARS THROAT]
+#    [Clears throat]
+#  (Clears throat)
+#    [clears throat]
+#  - (Cameraman gasps)
+#  - [ Bats Screeching ]
+# For speakers:
+#  [BOY1] Blah blah!
+#    [Boy 1] Blah blah!
+#  - (In unison) Blah, blah, blah!
+#    DRIVER:
+#    Oh, crap.
+#  JANUS: Division 6?
+#  I never heard of Division 6.
+#    JANUS [IN SPANISH]:
 #
 # Ideas for new features:
 # Extension of auto-correction: if of two single-line consecutive subs, one
@@ -69,17 +102,17 @@ my $scale = 1.0;
 my $offset = 0.0;
 my ($encodingIn,$encodingOut);
 my ($bAuto,$bVerbose,$bClean,$bCRLF,$bHasBOM,$tSaveBOM) = (0,0,0,0,0,-1);
-my ($bCheckLength,$bFixLength,$bInPlace,$bTextOnly,$bNukeHA,$bNukeHarder) = (0,0,0,0,0,0);
+my ($bCheckLength,$bFixLength,$bInPlace,$bTextOnly,$bNukeHA,$bNukeHarder,$bNukeURLs) = (0,0,0,0,0,0,0);
 my @insertInd = ();
 my @inserTime = ();
 
-
 sub printUsage
-{ #      12345678901234567890123456789012345678901234567890123456789012345678901234567890
+{
+	#      12345678901234567890123456789012345678901234567890123456789012345678901234567890
 	print "srtlab [options] file1.srt [file2.srt ...] > output.srt\n"
 	     ."SRT file editing tool.\n"
-	     ."  Multiple input files will be joined. You should make sure in such case that\n"
-	     ."    the time stamps do not overlap and the character encodings are the same.\n"
+	     ."  Multiple input files are joined. You should make sure in such case that the\n"
+	     ."    time stamps do not overlap and the character encodings are the same.\n"
 	     ."  Options:\n"
 	     ."  Time values must be in the format [-]HH:MM:SS.sss, or a floating-point number\n"
 	     ."    representing seconds.\n"
@@ -96,8 +129,7 @@ sub printUsage
 	     ."  -a Ta1 Ta2 Tb1 Tb2: automatically calculate S and O.\n"
 	     ."    Ta1 is the time at which a subtitle appears in the current SRT file, Ta2 is\n"
 	     ."    where it should appear in the output. The same for Tb1 and Tb2, for another\n"
-	     ."    subtitle. For maximum accuracy, use the earliest possible subtitle for Ta\n"
-	     ."    and the last subtitle for Tb.\n"
+	     ."    subtitle.  For best accuracy, use the earliest and latest subtitles.\n"
 	     ."  -b Ta1 Ta2: like -a, but only calculate the offset O.\n"
 	     ."  -i I: insert a new subtitle at index I (in the original file). This command\n"
 	     ."    can be repeated, e.g. to insert two subs at index 3, use -ii 3 3.\n"
@@ -114,8 +146,10 @@ sub printUsage
 	     ."    (BE CAREFUL!)\n"
 	     ."  -t: strip all SRT formatting and only output the text.\n"
 	     ."  -H: attempt to remove typical non-verbal annotations in subs for the hearing\n"
-       ."    impaired, e.g. (CLEARS THROAT).  You may want to combine this with -c.\n"
-       ."    Repeat -H to try to remove non-capitalized annotations.\n"
+	     ."    impaired, e.g. (CLEARS THROAT).  You should combine this with -c.\n"
+	     ."    Repeat -H to try to remove non-capitalized annotations (mind that this has\n"
+	     ."    a higher risk to mess things up, so only use when necessary).\n"
+	     ."  -U: erase all subtitles that have a URL in them (should combine with -c).\n"
 	     ."  -v: verbose mode.\n"
 	     ."  -V: print version and exit.\n";
 }
@@ -212,6 +246,7 @@ while( $#ARGV >= 0 ) {
 					$bNukeHA = 1;
 				}
 			}
+			elsif( $sw eq 'U' ) { $bNukeURLs = 1; }
 			elsif( $sw eq 'v' ) { $bVerbose = 1; }
 			elsif( $sw eq 'V' ) {
 				print "SRTLab $VERSION by Alexander Thomas\n";
@@ -293,9 +328,9 @@ foreach my $file (@files) {
 					shift(@insertInd);
 				}
 			}
-			elsif( $line =~ /^\d\d:\d\d:\d\d,\d+ --?> \d\d:\d\d:\d\d,\d+/ ) {
+			elsif( $line =~ /^\d\d:\d\d:\d\d,\d+ +--?> +\d\d:\d\d:\d\d,\d+/ ) {
 				$state = 1;
-				my ($tStart,$tEnd) = split(/ --?> /, $line);
+				my ($tStart,$tEnd) = split(/ +--?> +/, $line);
 				($tStart,$tEnd) = (fromHMS($tStart),fromHMS($tEnd));
 				while( $#inserTime > -1 && $tStart >= $inserTime[0] ) { # -j
 					my $tNext = $tStart;
@@ -314,7 +349,7 @@ foreach my $file (@files) {
 			elsif( $line ne '' ) {
 				$malform++;
 				if( $malform > 20 ) {
-					print STDERR "Too many unparseable lines, this file probably has bad syntax. Aborting.\n";
+					print STDERR "Too many unparseable lines, this file probably has bad syntax or is not an SRT file. Aborting.\n";
 					exit(1);
 				}
 				if($bVerbose) {
@@ -350,11 +385,11 @@ my $idxNew = 1;
 
 for( my $s=0; $s<=$#subs; $s++ ) {
 	if($bNukeHA) { # Remove (CLEARS THROAT) and other junk like that
-		$subs[$s] =~ s/\([A-Z0-9 ,.\-'"\n]+?\)//g;
-		$subs[$s] =~ s/\[[A-Z0-9 ,.\-'"\n]+?\]//g;
+		$subs[$s] =~ s/\([A-Z0-9 ,.\-'"\&\n]+?\)//g;
+		$subs[$s] =~ s/\[[A-Z0-9 ,.\-'"\&\n]+?\]//g;
 		if($bNukeHarder) { # Also remove lowercase and allow more varied formatting
-			$subs[$s] =~ s/-? ?\([A-Z0-9 ,.\-'"\n]+?\)//gi;
-			$subs[$s] =~ s/-? ?\[[A-Z0-9 ,.\-'"\n]+?\]//gi;
+			$subs[$s] =~ s/-? ?\([A-Z0-9 ,.\-'"\&\n]+?\)//gi;
+			$subs[$s] =~ s/-? ?\[[A-Z0-9 ,.\-'"\&\n]+?\]//gi;
 			$subs[$s] =~ s/\n[A-Z0-9 '"#]+?: /- /gi;
 			$subs[$s] =~ s/[A-Z0-9 '"#]+?: *\n//gi;
 			$subs[$s] =~ s/-[A-Z0-9 '"#]+?: /- /gi;
@@ -365,6 +400,13 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 			$subs[$s] =~ s/[A-Z0-9 '"#]+?:[ \n]//g;
 		}
 		$subs[$s] =~ s/^\n+([^\n])/$1/g; # Remove trailing empty lines
+	}
+	if($bNukeURLs) {
+		if($subs[$s] =~ m~([^\w\"\=\[\]]|[\n\b]|\A)\\*(\w+://[\w\~\.\;\:\,\$\-\+\!\*\?/\=\&\@\#\%]+\.[\w\~\;\:\$\-\+\!\*\?/\=\&\@\#\%]+[\w\~\;\:\$\-\+\!\*\?/\=\&\@\#\%])~i) {
+			$subs[$s] = '';
+		} elsif($subs[$s] =~ m~([^(?:\://\S*)\"\=\[\]/\:\.]|[>\(\n\b]|\A)(www\.[^\.][\w\~\.\;\:\,\$\-\+\!\*\?/\=\&\@\#\%]+\.[\w\~\;\:\$\-\+\!\*\?/\=\&\@\#\%]+[\w\~\;\:\$\-\+\!\*\?/\=\&\@\#\%])~i) {
+			$subs[$s] = '';
+		}
 	}
 	if( $bClean && $subs[$s] =~ /^(<.>\n*<\/.>)?\n*$/ ) { # -c: Skip if empty
 		$nCleaned++;
@@ -409,8 +451,8 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 			print STDERR "\n";
 		}
 		elsif( $dur > 3 && $dur > $stickRatio*length($sub) ) {
-			printf STDERR ("Sub $idxNew seems sticky: %.2f secs (at %s)\n",
-			               $dur, toHMS($starts[$s]) ); }
+			printf STDERR ("Sub $idxNew seems sticky: %.2f secs, expected %.2f (at %s)\n",
+			               $dur, $stickRatio*length($sub), toHMS($starts[$s]) ); }
 	}
 	if($bTextOnly) {
 		print $subs[$s] . $LE;
