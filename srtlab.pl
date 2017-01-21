@@ -9,9 +9,10 @@
 # Version 0.94 (2011/08): improved hearing-aid filtering
 # Version 0.95 (2011/09): added extra hearing-aid filtering mode
 # Version 0.96 (2012/07): overlap detection and removal
-# Version 0.97 (2014/XX): URL removal, even more robust against poor formatting, WORK IN PROGRESS
+# Version 0.97 (2017/01): URL removal, more robust against poor formatting, much
+#   better encoding detection; [Idiomdrottning] whitespace removal, -HH tweaks.
 #
-# Copyright (C) 2014  Alexander Thomas
+# Copyright (C) 2017  Alexander Thomas & Idiomdrottning
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,24 +29,32 @@
 
 use strict;
 use warnings;
+use utf8;
+use Encode qw(decode encode);
+use Encode::Guess;
 
-my $VERSION = "0.97a";
+my $VERSION = '0.97';
 
-# TODO: improve handling of encodings and allow to override input encoding detection.
-# FIXME: -HH breaks some subs that happen to end with a colon
-#   for instance: "one purpose, and one purpose only:\n\n" will lose everything after the comma
-#  -> Proposal: split subs in separate lines and process per line instead of attempting
-#     to write regexes that work across the entire sub, also make abstraction of $LE:
-#     process everything internally with \n and render with $LE.
-#  The whole H option is dodgy anyway because people keep on inventing new lay-outs for these
-#     hearing-aid annotations instead of using a single standard. I imagine this must also be
-#     terribly annoying to the people with hearing problems who have to get used to each
-#     different lay-out. Therefore more advanced proposal:
-#  Ideally, the script should be able to figure out the particular lay-out automatically.
+# TODO: allow the user to override input encoding detection, or to configure it.
+# TODO: further improve -HH to remove more variants without breaking regular dialogue.
+# For instance: "one purpose, and one purpose only:\n\n" risks losing everything after
+#   the comma if we would merely look for case insensitive [A-Z ]:.
+#   Also, -HH will destroy anything that looks like "Name:", even in a line like:
+#   'Same thing: "Deliver the Galaxy."' This is hard to avoid.
+# A first step to be able to do this in a sane way, is to make abstraction of $LE:
+#   convert everything internally to \n and render again with $LE. This avoids having
+#   to use $LE everywhere (there are certainly errors in the current code due to this).
+# The whole H option is dodgy anyway because people keep on inventing new lay-outs for
+#   these hearing-aid annotations instead of using a single standard. I imagine this must
+#   also be terribly annoying to the hearing impaired who have to get used to each
+#   different lay-out.
+# Therefore proposal: ideally, the script should be able to guess the particular
+#   lay-out automatically, a bit like detecting the encoding.
 # These lay-outs consist of two major parts: 1. annotation of sounds, 2. persons speaking,
-#   and often they will also contain 3. music lyrics: if you're lucky, indicated with ♪ symbol,
-#   also sometimes with ~ instead. Proposal: first run through the entire file and check for
-#   every part which formatting is most likely used, then do the actual destruction.
+#   and often they will also contain 3. music lyrics: if you're lucky, indicated with ♪
+#   symbol, also sometimes with ~ or # instead. Proposal: first run through the entire
+#   file and check for every part which formatting is most likely used, then do the actual
+#   processing.
 # Only make it optional to leave lyrics, the rest must be fully automatic.
 # Some flavours I have seen:
 # For noises:
@@ -66,12 +75,18 @@ my $VERSION = "0.97a";
 #    JANUS [IN SPANISH]:
 #
 # Ideas for new features:
-# Extension of auto-correction: if of two single-line consecutive subs, one
+# Extension of auto-correction: when of two single-line consecutive subs, one
 #  is shown too long and one too short, and they're within a reasonable time,
 #  they can be merged. But this will require manual intervention to include
 #  the mandatory "- " indicator when fusing dialogue from different actors.
 # Similarly, too long subs could be split up (although those mostly stem from
 #  hopelessly poor translation anyway)
+#
+# Repair typical OCR errors. Many of the typical mistakes can be corrected
+#  automatically with reasonable confidence (for instance “l'm a bad OCR program
+#  and l like the letter L”). For this to work really reliably though, it would
+#  need to be tied to a spell checker and perhaps even a language model, so this
+#  is not trivial. It could help a lot to make -H work reliably though.
 #
 # Automatic syncing of a subtitle file given another file with correct sync
 #  (e.g. in another language or a worthless translation with good sync):
@@ -101,8 +116,9 @@ my $gap = .08;
 my $scale = 1.0;
 my $offset = 0.0;
 my ($encodingIn,$encodingOut);
-my ($bAuto,$bVerbose,$bClean,$bCRLF,$bHasBOM,$tSaveBOM) = (0,0,0,0,0,-1);
-my ($bCheckLength,$bFixLength,$bInPlace,$bTextOnly,$bNukeHA,$bNukeHarder,$bNukeURLs) = (0,0,0,0,0,0,0);
+my ($bAuto,$bVerbose,$bClean,$bCRLF,$bHasBOM);
+my $tSaveBOM = -1;
+my ($bCheckLength,$bFixLength,$bInPlace,$bTextOnly,$bNukeHA,$bNukeHarder,$bNukeURLs,$bWhitespace);
 my @insertInd = ();
 my @inserTime = ();
 
@@ -150,6 +166,7 @@ sub printUsage
 	     ."    Repeat -H to try to remove non-capitalized annotations (mind that this has\n"
 	     ."    a higher risk to mess things up, so only use when necessary).\n"
 	     ."  -U: erase all subtitles that have a URL in them (should combine with -c).\n"
+	     ."  -w: Strip whitespace from beginning and end of lines\n"
 	     ."  -v: verbose mode.\n"
 	     ."  -V: print version and exit.\n";
 }
@@ -247,9 +264,10 @@ while( $#ARGV >= 0 ) {
 				}
 			}
 			elsif( $sw eq 'U' ) { $bNukeURLs = 1; }
+			elsif( $sw eq 'w' ) { $bWhitespace = 1; }
 			elsif( $sw eq 'v' ) { $bVerbose = 1; }
 			elsif( $sw eq 'V' ) {
-				print "SRTLab $VERSION by Alexander Thomas\n";
+				print "SRTLab $VERSION by Alexander Thomas & Idiomdrottning\n";
 				exit(0);
 			}
 			elsif( $sw eq 'h' ) {
@@ -291,7 +309,7 @@ foreach my $file (@files) {
 	# Sniff the encoding of the file
 	my $enc = sniffEncoding($file);
 	($bHasBOM,$encodingIn) = split(',',$enc);
- 	binmode STDERR, ":encoding($encodingIn)";
+	binmode STDERR, ":encoding($encodingIn)";
 	if($bVerbose) {
 		print STDERR "Encoding for file `$file' detected as `$encodingIn'";
 		if($bHasBOM) { print STDERR ", with BOM\n"; }
@@ -308,7 +326,7 @@ foreach my $file (@files) {
 	my $state = 0; # 0 = looking for next time stamp, 1 = inside sub
 	my $idxOld = 0;
 	my $bFirst = 1;
-	
+
 	foreach my $line (<FILE>) {
 		chomp($line);
 		$line =~ s/\r$//;
@@ -384,30 +402,45 @@ if( $encodingOut =~ /^UTF-/i && $tSaveBOM ) {
 my $idxNew = 1;
 
 for( my $s=0; $s<=$#subs; $s++ ) {
-	if($bNukeHA) { # Remove (CLEARS THROAT) and other junk like that
+	if($bWhitespace) {  # Do this twice, once before (to make it easier for -H)...
+		$subs[$s] =~ s/^[ \t]+//mg;
+		$subs[$s] =~ s/[ \t]+$//mg;
+	}
+	if($bNukeHA) {
+		# Remove simple hearing-impaired annotations like "(CLEARS THROAT)" or "[NOISE]"
 		$subs[$s] =~ s/\([A-Z0-9 ,.\-'"\&\n]+?\)//g;
 		$subs[$s] =~ s/\[[A-Z0-9 ,.\-'"\&\n]+?\]//g;
-		if($bNukeHarder) { # Also remove lowercase and allow more varied formatting
-			$subs[$s] =~ s/-? ?\([A-Z0-9 ,.\-'"\&\n]+?\)//gi;
-			$subs[$s] =~ s/-? ?\[[A-Z0-9 ,.\-'"\&\n]+?\]//gi;
-			$subs[$s] =~ s/\n[A-Z0-9 '"#]+?: /- /gi;
-			$subs[$s] =~ s/[A-Z0-9 '"#]+?: *\n//gi;
-			$subs[$s] =~ s/-[A-Z0-9 '"#]+?: /- /gi;
-			$subs[$s] =~ s/[A-Z0-9 '"#]+?: //gi;
+		if($bNukeHarder) { # Case insensitive and more varied formatting
+			$subs[$s] =~ s/-? ?\([A-Z0-9 ,.!\-'"\&\/\n]+?\)//gi;
+			$subs[$s] =~ s/-? ?\[[A-Z0-9 ,.!\-'"\&\/\n]+?\]//gi;
+			# "Name: Text" on new line, should therefore become "- Text"
+			$subs[$s] =~ s/^[A-Z0-9 '"#]+?: /- /mgi;
+			# This has a high risk of affecting regular lines, therefore keep it case sensitive. TODO: improve
+			$subs[$s] =~ s/[A-Z0-9 '"#]+?: *$//mg;
+			$subs[$s] =~ s/^-[A-Z0-9 '"#]+?: /- /mgi;
+			$subs[$s] =~ s/^[A-Z0-9 '"#]+?: //mgi;
 		}
 		else {
-			$subs[$s] =~ s/\n[A-Z0-9 '"#]+?: /\n- /g;
+			# "NAME: Text" on new line, should therefore become "- Text"
+			$subs[$s] =~ s/^[A-Z0-9 '"#]+?: /- /mg;
 			$subs[$s] =~ s/[A-Z0-9 '"#]+?:[ \n]//g;
 		}
 		$subs[$s] =~ s/^\n+([^\n])/$1/g; # Remove trailing empty lines
 	}
 	if($bNukeURLs) {
+		# These atrocious regexes should catch most common URLs, at least they did when I tweaked them long ago.
 		if($subs[$s] =~ m~([^\w\"\=\[\]]|[\n\b]|\A)\\*(\w+://[\w\~\.\;\:\,\$\-\+\!\*\?/\=\&\@\#\%]+\.[\w\~\;\:\$\-\+\!\*\?/\=\&\@\#\%]+[\w\~\;\:\$\-\+\!\*\?/\=\&\@\#\%])~i) {
 			$subs[$s] = '';
 		} elsif($subs[$s] =~ m~([^(?:\://\S*)\"\=\[\]/\:\.]|[>\(\n\b]|\A)(www\.[^\.][\w\~\.\;\:\,\$\-\+\!\*\?/\=\&\@\#\%]+\.[\w\~\;\:\$\-\+\!\*\?/\=\&\@\#\%]+[\w\~\;\:\$\-\+\!\*\?/\=\&\@\#\%])~i) {
 			$subs[$s] = '';
 		}
 	}
+
+	if($bWhitespace) {  # ... and once after to clean up any remains.
+		$subs[$s] =~ s/^[ \t]+//mg;
+		$subs[$s] =~ s/[ \t]+$//mg;
+	}
+
 	if( $bClean && $subs[$s] =~ /^(<.>\n*<\/.>)?\n*$/ ) { # -c: Skip if empty
 		$nCleaned++;
 		next;
@@ -511,7 +544,7 @@ sub toHMS
 		$ip *= -1;
 	}
 	if( ! defined($fp) ) { $fp = 0; }
-	my $s = ($ip % 60) . ".$fp";	
+	my $s = ($ip % 60) . ".$fp";
 	my $m = int($ip/60)%60;
 	my $h = int($ip/3600);
 	my $hms = sprintf("%02d:%02d:%06.3f", $h,$m,$s);
@@ -540,28 +573,61 @@ sub fromScale
 sub sniffEncoding
 # 'Sniff' the encoding of a file, and the presence of a BOM character.
 # Return value is "$bHasBOM,$encoding".
+# The only encodings currently supported are UTF-8, UTF-16, cp1252, shiftjis,
+#   and ascii.
 # Ideally, this function would be able to identify any encoding on any file,
-#   even without the presence of any BOM. For 8-bit encodings this could be
-#   done by looking at statistics of the non-ASCII codes, for UTF-n it can be
-#   done by looking if the stream is valid UTF-8, UTF-16LE etc.
-# But for now this primitive unfinished version will only recognize UTF-8 and
-#   UTF-16 files with a BOM, and otherwise assume 'Windows Latin 1' (cp1252).
-# TODO: improve this!
+#   even without the presence of any BOM.
+# I currently rely on direct detection of the BOM (because this is trivial), and
+#   otherwise I either try guess_encoding or attempt to decode the data as UTF8
+#   (because guess_encoding seems to have problems detecting UTF-8 reliably).
+# To improve upon this and reliably detect 8-bit encodings like the ISO-8859
+#   family, something more advanced would be required that looks at statistics
+#   of occurring code points to make an educated guess. However, that is a bit
+#   beyond the scope of this simple tool. What would be useful though, is to
+#   allow the user to force a specific encoding, or provide their own set of
+#   candidates to steer guess_encoding.
 {
-	open FILE, '<:bytes', $_[0] or die "Can't open file `$_[0]'\n";
-	my $line = <FILE>;
-	close FILE;
+	my $fHandle;
+	open($fHandle, '<:bytes', $_[0]) or die "Can't open file `$_[0]'\n";
+	my $line = <$fHandle>;
+	close($fHandle);
+
 	# Beware that this is different if perl treats the string as utf-8/16, in
 	# that case the BOM is represented by by \x{feff}
-	if( $line =~ /^\x{ef}\x{bb}\x{bf}/ ) {
-		return '1,UTF-8'; }
-	elsif( $line =~ /^\x{fe}\x{ff}/ ) {
-		return '1,UTF-16BE'; }
-	elsif( $line =~ /^\x{ff}\x{fe}/ ) {
-		return '1,UTF-16LE'; }
-	else {
-		return '0,cp1252'; }
-#		return '0,iso-8859-5'; }
+	if($line =~ /^\x{ef}\x{bb}\x{bf}/) {
+		return '1,UTF-8';
+	} elsif($line =~ /^\x{fe}\x{ff}/) {
+		return '1,UTF-16BE';
+	} elsif($line =~ /^\x{ff}\x{fe}/) {
+		return '1,UTF-16LE';
+	}
+
+	# No BOM found, try a more elaborate method. We need the entire file for
+	# this because we cannot just read any chunk without risking to truncate a
+	# multi-byte code point. Luckily, SRT files are never very big.
+	open($fHandle, '<:bytes', $_[0]) or die "Can't open file `$_[0]'\n";
+	my ($data, $chunk) = ('', '');
+	while(read($fHandle, $chunk, 16384)) {
+		$data .= $chunk;
+	}
+	close($fHandle);
+
+	my $enc = guess_encoding($data, qw'UTF-16BE UTF-16LE cp1252 shiftjis ascii');
+	if(! ref($enc)) {
+		# Guessing failed. Try decoding as UTF-8 instead. If this works, there
+		# is a good chance it actually is UTF-8.
+		eval{$chunk = decode("UTF-8", $data, Encode::FB_CROAK);};
+		if(!$@) {
+			return '0,UTF-8';
+		} else {
+			# Falling back to cp1252 is a desperate measure to let the program
+			# continue, but the output will probably be corrupted.
+			print STDERR "ERROR: encoding detection failed. Assuming cp1252, which is probably wrong.\n  You should try again after converting the input file to a known encoding like UTF-8.\n";
+			return '0,cp1252';
+		}
+		} else {
+		return '0,'. $enc->name;
+	}
 }
 
 # note: to get list of supported encodings:
