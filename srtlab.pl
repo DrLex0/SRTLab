@@ -11,7 +11,7 @@
 # Version 0.96 (2012/07): overlap detection and removal
 # Version 0.97 (2017/01): URL removal, more robust against poor formatting, much
 #   better encoding detection; [Idiomdrottning] whitespace removal, -HH tweaks.
-# Version 0.98 (2012/09): rudimentary OCR error fix option
+# Version 0.98 (2017/09): rudimentary OCR error fix option
 #
 # Copyright (C) 2017  Alexander Thomas & Idiomdrottning
 #
