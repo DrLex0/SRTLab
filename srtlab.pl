@@ -107,7 +107,7 @@ my $VERSION = '0.97';
 my $minRatio = .034;
 # Maximum ratio of seconds/#characters, above which a subtitle will be
 # marked as 'sticky' if it appears longer than 3 seconds.
-my $stickRatio = .2;
+my $stickRatio = .22;
 # Absolute minimum duration in seconds for any subtitle, no matter how short
 my $minDur = .8;
 # Gap to leave between end of this subtitle and start of next when auto-correcting
