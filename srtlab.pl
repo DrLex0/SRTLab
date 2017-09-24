@@ -86,7 +86,7 @@ my $VERSION = '0.97';
 #  automatically with reasonable confidence (for instance “l'm a bad OCR program
 #  and l like the letter L”). For this to work really reliably though, it would
 #  need to be tied to a spell checker and perhaps even a language model, so this
-#  is not trivial. It could help a lot to make -H work reliably though.
+#  is not trivial. This is a prerequisite to make -H work reliably.
 #
 # Automatic syncing of a subtitle file given another file with correct sync
 #  (e.g. in another language or a worthless translation with good sync):
@@ -118,7 +118,7 @@ my $offset = 0.0;
 my ($encodingIn,$encodingOut);
 my ($bAuto,$bVerbose,$bClean,$bCRLF,$bHasBOM);
 my $tSaveBOM = -1;
-my ($bCheckLength,$bFixLength,$bInPlace,$bTextOnly,$bNukeHA,$bNukeHarder,$bNukeURLs,$bWhitespace);
+my ($bCheckLength,$bFixLength,$bInPlace,$bTextOnly,$bNukeHA,$bNukeHarder,$bNukeURLs,$bWhitespace,$bFixOCR);
 my @insertInd = ();
 my @inserTime = ();
 
@@ -161,6 +161,8 @@ sub printUsage
 	     ."  -e: in-place editing: overwrite first file instead of printing to stdout\n"
 	     ."    (BE CAREFUL!)\n"
 	     ."  -t: strip all SRT formatting and only output the text.\n"
+	     ."  -f: try to fix common OCR errors (tuned for English only). This may help to\n"
+	     ."      obtain a better result with -H."
 	     ."  -H: attempt to remove typical non-verbal annotations in subs for the hearing\n"
 	     ."    impaired, e.g. (CLEARS THROAT).  You should combine this with -c.\n"
 	     ."    Repeat -H to try to remove non-capitalized annotations (mind that this has\n"
@@ -256,6 +258,7 @@ while( $#ARGV >= 0 ) {
 			elsif( $sw eq 'M' ) { $tSaveBOM = 0; }
 			elsif( $sw eq 'e' ) { $bInPlace = 1; }
 			elsif( $sw eq 't' ) { $bTextOnly = 1; }
+			elsif( $sw eq 'f' ) { $bFixOCR = 1; }
 			elsif( $sw eq 'H' ) {
 				if($bNukeHA) {
 					$bNukeHarder = 1;
@@ -400,11 +403,41 @@ binmode STDOUT, ":encoding($encodingOut)";
 if( $encodingOut =~ /^UTF-/i && $tSaveBOM ) {
 	printf( '%c', 0xfeff ); }
 my $idxNew = 1;
+my $ocrFixes = 0;
 
 for( my $s=0; $s<=$#subs; $s++ ) {
 	if($bWhitespace) {  # Do this twice, once before (to make it easier for -H)...
 		$subs[$s] =~ s/^[ \t]+//mg;
 		$subs[$s] =~ s/[ \t]+$//mg;
+	}
+	if($bFixOCR) {
+		# Fix obvious OCR errors, only for English at the moment. This is just a bunch of
+		# ugly heuristics, there are better ways to do this, but it's a lot better than nothing.
+		# Many of these errors are caused by the dumb idea of making 'l' and 'I' look
+		# identical in sans-serif fonts, and the lack of smartness in OCR programs.
+		my $orig = $subs[$s];
+
+		# Fix "I ", "I'", "If", "In", "Is", and "It" and any words starting with the latter
+		# (AFAIK there are no words in English starting with "ln", "ls", etc).
+		# Take care not to break e.g. "nice-looking", so don't just assume '-' marks a new word.
+		$subs[$s] =~ s/(^-?|\s-?|[.…"“])l([ '’.,fnst]|$)/$1I$2/gm;
+		# OCR programs also often drop spaces around 'f' or 'j'. Fixing all these is difficult,
+		# but we can be sure no English words start with any character followed by "fj".
+		$subs[$s] =~ s/(^|\s|[.-…"“])(\w)fj/$1$2f j/gm;
+
+		# Fix capital 'I' in all-caps word (why do OCR programs keep making this obvious mistake?)
+		$subs[$s] =~ s/(^|\s|\[|\(|-)l([A-Z])/$1I$2/gm;  # at start of word
+		$subs[$s] =~ s/([A-Z]{2,})l/$1I/gm;  # at end or inside, preceded by at least two capitals
+		$subs[$s] =~ s/([A-Z])l([A-Z])/$1I$2/gm;  # in between two capitals
+
+		# Fix spurious spaces after '1' in numbers (this will probably mess up a few cases
+		# where the space was intended, but most often by far it is an error).
+		$subs[$s] =~ s/1 (\d+|[.,:])/1$1/gm;
+		$subs[$s] =~ s/1 (\d+|[.,:])/1$1/gm; # Do this twice because the \d may also have been a 1.
+		if($subs[$s] ne $orig) {
+			$ocrFixes++;
+			print STDERR "OCR corrected: $subs[$s]\n" if($bVerbose);
+		}
 	}
 	if($bNukeHA) {
 		# Remove simple hearing-impaired annotations like "(CLEARS THROAT)" or "[NOISE]"
@@ -500,6 +533,9 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 
 if( $bClean && $bVerbose) {
 	print STDERR "Removed $nCleaned empty subtitles.\n";
+}
+if( $ocrFixes && $bVerbose ) {
+	print STDERR "Fixed ${ocrFixes} subtitles with presumed OCR errors.\n";
 }
 
 
