@@ -770,7 +770,7 @@ Talking to Tony.
 
 173
 00:13:16,712 --> 00:13:19,047
-ls Tony one of your animals?
+Is Tony one of your animals?
 
 174
 00:13:19,924 --> 00:13:22,884
@@ -1265,7 +1265,7 @@ Oh, fine.
 
 284
 00:20:15,756 --> 00:20:17,673
-ln view of all we have to cover today...
+In view of all we have to cover today...
 
 285
 00:20:17,883 --> 00:20:21,552
@@ -1314,7 +1314,7 @@ like this before.
 295
 00:20:51,792 --> 00:20:53,751
 Are all these
-lndian designs authentic?
+Indian designs authentic?
 
 296
 00:20:53,961 --> 00:20:55,378
@@ -1344,7 +1344,7 @@ an illustrious past.
 
 302
 00:21:09,059 --> 00:21:12,186
-ln its heyday, it was a stopping
+In its heyday, it was a stopping
 place for the jet setters...
 
 303
@@ -1683,7 +1683,7 @@ This is it.
 378
 00:25:39,538 --> 00:25:41,997
 How do you like it, Danny?
-ls it big enough for you?
+Is it big enough for you?
 
 379
 00:25:42,165 --> 00:25:45,501
@@ -1840,7 +1840,7 @@ Now, this is the storeroom.
 
 412
 00:27:20,722 --> 00:27:22,556
-ln here is where we keep...
+In here is where we keep...
 
 413
 00:27:22,724 --> 00:27:25,559
@@ -2014,7 +2014,7 @@ a little boy...
 
 449
 00:29:40,028 --> 00:29:42,571
-...my grandmother and l
+...my grandmother and I
 could hold conversations...
 
 450
@@ -2081,7 +2081,7 @@ that lives in my mouth.
 
 464
 00:30:49,556 --> 00:30:51,598
-ls Tony the one that...
+Is Tony the one that...
 
 465
 00:30:51,766 --> 00:30:53,350
@@ -2193,7 +2193,7 @@ that's like shining.
 
 490
 00:32:24,609 --> 00:32:27,027
-ls there something bad here?
+Is there something bad here?
 
 491
 00:32:35,078 --> 00:32:36,703
@@ -2499,7 +2499,7 @@ Give me your hand.
 
 560
 00:38:34,061 --> 00:38:35,854
-lsn't it beautiful?
+Isn't it beautiful?
 
 561
 00:38:36,063 --> 00:38:37,063
@@ -2772,15 +2772,15 @@ I knew it.
 
 623
 00:48:02,796 --> 00:48:06,299
-This is KDK 12 calling KDK 1 .
+This is KDK 12 calling KDK 1.
 
 624
 00:48:08,802 --> 00:48:12,513
-KDK 12 to KDK 1 .
+KDK 12 to KDK 1.
 
 625
 00:48:12,723 --> 00:48:15,850
-This is KDK 1 .
+This is KDK 1.
 We're receiving you. Over.
 
 626
@@ -2838,7 +2838,7 @@ we've had for years.
 
 637
 00:48:51,011 --> 00:48:54,221
-ls there anything else we can
+Is there anything else we can
 do for you, Mrs. Torrance?
 
 638
@@ -3210,7 +3210,7 @@ You know that, don't you?
 Good.
 
 727
-00:57:41,958 --> 00:57:42,853
+00:57:41,958 --> 00:58:02,853
 Mom?
 
 728
@@ -3264,7 +3264,7 @@ Really.
 
 740
 01:00:18,281 --> 01:00:19,865
-I dreamed that l...
+I dreamed that I...
 
 741
 01:00:20,074 --> 01:00:22,534
@@ -4003,7 +4003,7 @@ of what happened...
 
 914
 01:18:55,564 --> 01:18:56,897
-ls there?
+Is there?
 
 915
 01:18:59,276 --> 01:19:02,153
@@ -4230,7 +4230,7 @@ No charge?
 Your money's no good here.
 
 966
-01:23:55,280 --> 01:24:00,000
+01:23:55,280 --> 01:24:02,703
 Orders from the house.
 
 967
@@ -4618,7 +4618,7 @@ Well...
 
 1057
 01:30:16,994 --> 01:30:19,413
-lndeed he is, Mr. Torrance.
+Indeed he is, Mr. Torrance.
 
 1058
 01:30:19,622 --> 01:30:22,499
@@ -4658,7 +4658,7 @@ Perhaps they need a good...
 
 1067
 01:30:52,447 --> 01:30:53,488
-lf...
+If...
 
 1068
 01:30:53,656 --> 01:30:56,241
@@ -4692,7 +4692,7 @@ a pack of matches...
 
 1075
 01:31:17,889 --> 01:31:19,556
-But l...
+But I...
 
 1076
 01:31:19,724 --> 01:31:21,725
@@ -4705,7 +4705,7 @@ from doing my duty...
 
 1078
 01:31:27,398 --> 01:31:28,648
-...l...
+...I...
 
 1079
 01:31:29,650 --> 01:31:31,735
@@ -5205,7 +5205,7 @@ I'm going to lock the door
 behind me.
 
 1194
-01:41:33,212 --> 01:41:34,868
+01:41:33,212 --> 01:41:57,068
 Jack?
 
 1195
@@ -5250,7 +5250,7 @@ What do you want to talk about?
 
 1205
 01:45:06,967 --> 01:45:08,217
-l....
+I....
 
 1206
 01:45:08,885 --> 01:45:12,054
@@ -5667,7 +5667,7 @@ Hey.
 Wait a minute.
 
 1301
-01:50:42,427 --> 01:50:47,515
+01:50:42,427 --> 01:50:48,515
 What are you doing?
 
 1302
@@ -5940,7 +5940,7 @@ do you, Mr. Torrance?
 I give you my word.
 
 1366
-01:58:45,701 --> 01:58:51,993
+01:58:45,701 --> 02:00:51,993
 Redrum.
 
 1367
@@ -6059,7 +6059,7 @@ Hello?
 Anybody here?
 
 1395
-02:08:04,885 --> 02:08:07,235
+02:08:04,885 --> 02:08:22,235
 Hello?
 
 1396
@@ -6079,7 +6079,7 @@ Danny-boy!
 Danny?
 
 1400
-02:09:15,330 --> 02:09:18,834
+02:09:15,330 --> 02:09:19,834
 Danny.
 
 1401
@@ -6087,7 +6087,7 @@ Danny.
 Danny?
 
 1402
-02:10:53,428 --> 02:10:55,979
+02:10:53,428 --> 02:11:44,979
 Danny!
 
 1403
@@ -6127,7 +6127,7 @@ You can't get away!
 I'm right behind you!
 
 1412
-02:14:23,180 --> 02:14:26,320
+02:14:23,180 --> 02:17:26,320
 Danny!
 
 1413
