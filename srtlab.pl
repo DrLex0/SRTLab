@@ -163,7 +163,7 @@ sub printUsage
 	     ."    (BE CAREFUL!)\n"
 	     ."  -t: strip all SRT formatting and only output the text.\n"
 	     ."  -f: try to fix common OCR errors (tuned for English only). This may help to\n"
-	     ."      obtain a better result with -H."
+	     ."      obtain a better result with -H.\n"
 	     ."  -H: attempt to remove typical non-verbal annotations in subs for the hearing\n"
 	     ."    impaired, e.g. (CLEARS THROAT).  You should combine this with -c.\n"
 	     ."    Repeat -H to try to remove non-capitalized annotations (mind that this has\n"
