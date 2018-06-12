@@ -41,7 +41,7 @@ If you know the file is free of OCR errors, you may omit 'f' to avoid any risk o
 At this time the script will only work with UTF-8, UTF-16, Windows Latin 1, or Shift-JIS encoded files. It can detect UTF-x files both with and without a starting Unicode BOM character. If you have files in other encodings, you will either need to convert them to a known encoding first (UTF-8 recommended), or modify the last lines of the script to recognise those encodings. My advice is to write all your output srt files in Unicode unless your media player does not support it. The 8-bit encodings are a thing of the past.
 
 ## Note to developers
-The code uses 'tab indenting'. The rule is very simple: one code indent level == one tab, and this is the *only* thing tabs may be used for. For any other whitespace formatting, use spaces. This makes it trivial to adjust indent width in any editor that has configurable tab width. If you edit the code and want to make a pull request, please try to follow this convention. Also, even though this *is* Perl, please try not to write read-only code.
+The code uses 'tab indenting'. The rule is very simple: one code indent level == one tab, and this is the *only* thing tabs may be used for. For any other whitespace formatting, use spaces. This makes it trivial to adjust indent width in any editor that has configurable tab width. If you edit the code and want to make a pull request, please try to follow this convention. Also, even though this *is* Perl, please try not to create ‘write-only’ code.
 
 ## License
 This program is released under the GNU General Public License. See the source file and COPYING for more details.
