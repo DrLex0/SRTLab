@@ -1,7 +1,7 @@
 # SRTLab
 *SubRip subtitle file converter*<br>
 by Alexander Thomas, aka Dr. Lex (with contributions by Idiomdrottning)<br>
-Current version: 0.98<br>
+Current version: 0.99<br>
 Contact: visit https://www.dr-lex.be/lexmail.html<br>
 &nbsp;&nbsp;&nbsp;&nbsp;or use my gmail address "doctor.lex".
 
@@ -25,6 +25,9 @@ BEWARE: do not try this:<br>
 `srtlab.pl input.srt > input.srt`<br>
 This will destroy input.srt and leave you with an empty file. If you want to overwrite the input directly, instead run the script as follows and be aware that you will not be able to fix any mistakes you made unless you have a back-up of the file:
 `srtlab -e input.srt`
+
+Multiple files can be joined by passing additional file arguments. This assumes the files are sequential, hence if an offset is required per file, it must already have been applied.<br>
+It is also possible to inject subtitles from a file based on their timestamps with the `-J` option. There is no sequentiality requirement for this method, but you should still ensure that the injected subtitles do not overlap with existing ones.
 
 The -L option can only fix too short subtitles if there is enough empty time after them. Otherwise more manual work will be required to fix the poorly made subtitle file. This option does not shorten 'sticky' subtitles (i.e. that appear too long) because these can sometimes be intentional. You should check the reported sticky subs yourself and fix them if necessary. In case of overlapping subtitles, -L will cut off the first subtitle in an overlapping pair at the time where the second one starts.
 

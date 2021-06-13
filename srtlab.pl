@@ -12,8 +12,9 @@
 # Version 0.97 (2017/01): URL removal, more robust against poor formatting, much
 #   better encoding detection; [Idiomdrottning] whitespace removal, -HH tweaks.
 # Version 0.98 (2017/09): rudimentary OCR error fix option
+# Version 0.99 (2021/06): added -J option, fixed incorrect ordering in -i, -j
 #
-# Copyright (C) 2017  Alexander Thomas & Idiomdrottning
+# Copyright (C) 2021  Alexander Thomas & Idiomdrottning
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,7 +35,7 @@ use utf8;
 use Encode qw(decode encode);
 use Encode::Guess;
 
-my $VERSION = '0.98';
+my $VERSION = '0.99';
 
 # TODO: allow the user to override input encoding detection, or to configure it.
 # TODO: further improve -HH to remove more variants without breaking regular dialogue.
