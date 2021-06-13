@@ -117,20 +117,23 @@ my $gap = .08;
 my $scale = 1.0;
 my $offset = 0.0;
 my ($encodingIn,$encodingOut);
-my ($bAuto,$bVerbose,$bClean,$bCRLF,$bHasBOM);
+my $LE = "\n";
+my ($bAuto,$bVerbose,$bClean,$bHasBOM);
 my $tSaveBOM = -1;
 my ($bCheckLength,$bFixLength,$bInPlace,$bTextOnly,$bNukeHA,$bNukeHarder,$bNukeURLs,$bWhitespace,$bFixOCR);
-my @insertInd = ();
-my @inserTime = ();
+my @insertInd;  # for -i
+my @inserTime;  # for -j and -J. Floating-point numbers.
+my %inserSubs;  # subtitle texts for -J
+my %inserEnds;  # subtitle end times for -J. Floating-point numbers.
 
 sub printUsage
 {
 	#      12345678901234567890123456789012345678901234567890123456789012345678901234567890
 	print "srtlab [options] file1.srt [file2.srt ...] > output.srt\n"
 	     ."SRT file editing tool.\n"
-	     ."  Multiple input files are joined. You should make sure in such case that the\n"
-	     ."    time stamps do not overlap and the character encodings are the same.\n"
-	     ."  Options:\n"
+	     ."  Multiple input files are joined sequentially. Make sure that the first\n"
+	     ."    timestamp of each file comes after the last stamp of the previous.\n"
+	     ."Options:\n"
 	     ."  Time values must be in the format [-]HH:MM:SS.sss, or a floating-point number\n"
 	     ."    representing seconds.\n"
 	     ."  -e: in-place editing: overwrite first file instead of printing to stdout\n"
@@ -152,12 +155,14 @@ sub printUsage
 	     ."    subtitle.  For best accuracy, use the earliest and latest subtitles.\n"
 	     ."  -b Ta1 Ta2: like -a, but only calculate the offset O.\n"
 	     ."  -i I: insert a new subtitle at index I (in the original file). This command\n"
-	     ."    can be repeated, e.g. to insert two subs at index 3, use -ii 3 3.\n"
+	     ."    can be repeated, e.g., to insert two subs at index 3, use -ii 3 3.\n"
 	     ."  -j J: insert a new subtitle at original time J (can be repeated as well).\n"
+	     ."  -J file.srt: insert subtitles from the given SRT file, using their timestamps\n"
+	     ."    relative to the original times of the other input files.\n"
 	     ."  -f: try to fix common OCR errors (tuned for English only). This may help to\n"
-	     ."      obtain a better result with -H.\n"
+	     ."    obtain a better result with -H.\n"
 	     ."  -H: attempt to remove typical non-verbal annotations in subs for the hearing\n"
-	     ."    impaired, e.g. (CLEARS THROAT).  You should combine this with -c.\n"
+	     ."    impaired, e.g., (CLEARS THROAT).  You should combine this with -c.\n"
 	     ."    Repeat -H to try to remove non-capitalized annotations (mind that this has\n"
 	     ."    a higher risk to mess things up, so only use when necessary).\n"
 	     ."  -l: report subtitles that appear too briefly or overly long, or overlap.\n"
@@ -175,7 +180,8 @@ sub printUsage
 }
 
 
-my @files = ();
+my @files;
+my @insFiles;
 
 if( $#ARGV < 0 ) {
 	printUsage();
@@ -233,7 +239,7 @@ while( $#ARGV >= 0 ) {
 			}
 			elsif( $sw eq 'i' ) {
 				my $ind = shift;
-				if( ! defined($ind) || $ind < 1 ) {
+				if( ! defined($ind) || $ind !~ /^\d+$/ || $ind < 1 ) {
 					print STDERR "-i expects an integer greater than 0 as next argument.\n";
 					exit(2);
 				}
@@ -245,7 +251,15 @@ while( $#ARGV >= 0 ) {
 					print STDERR "-j expects a floating-point number or HH:MM:SS.sss time as next argument.\n";
 					exit(2);
 				}
-				push(@inserTime,fromHMS($tim));
+				push(@inserTime, fromHMS($tim));
+			}
+			elsif( $sw eq 'J' ) {
+				my $xFile = shift;
+				if( ! defined($xFile) || $xFile eq '' ) {
+					print STDERR "-J expects a file path as next argument.\n";
+					exit(2);
+				}
+				push(@insFiles, $xFile);
 			}
 			elsif( $sw eq 'l' ) { $bCheckLength = 1; }
 			elsif( $sw eq 'L' ) {
@@ -253,7 +267,7 @@ while( $#ARGV >= 0 ) {
 				$bFixLength = 1;
 			}
 			elsif( $sw eq 'c' ) { $bClean = 1; }
-			elsif( $sw eq 'r' ) { $bCRLF = 1; }
+			elsif( $sw eq 'r' ) { $LE = "\r\n"; }
 			elsif( $sw eq 'u' ) { $encodingOut = 'UTF-8'; }
 			elsif( $sw eq 'm' ) { $tSaveBOM = 1; }
 			elsif( $sw eq 'M' ) { $tSaveBOM = 0; }
@@ -295,12 +309,58 @@ if($bVerbose) {
 	}
 }
 
-@insertInd = sort(@insertInd);
-@inserTime = sort(@inserTime);
 
-my $LE = "\n";
-if($bCRLF) {
-	$LE = "\r\n"; }
+# Read the files with subs to be injected. We care less about how well these are formatted.
+foreach my $file (@insFiles) {
+	my $enc = sniffEncoding($file);
+	($bHasBOM, $encodingIn) = split(',', $enc);
+	if($bVerbose) {
+		print STDERR "Encoding for file `${file}' detected as `${encodingIn}'";
+		print STDERR ($bHasBOM ? ", with BOM\n" : "\n");
+	}
+
+	open(FILE, "<:encoding($encodingIn)", $file) or die "Can't open file `${file}'\n";
+	my $state = 0;  # 0 = looking for next time stamp, 1 = inside sub
+	my $idxOld = 0;
+	my $bFirst = 1;
+	my $curStart;
+
+	foreach my $line (<FILE>) {
+		chomp($line);
+		$line =~ s/\r$//;
+		if($bFirst) {
+			$bFirst = 0;
+			# The BOM is unicode character U+FEFF, regardless of encoding
+			$line =~ s/^\x{feff}// if($bHasBOM);
+		}
+		if($state == 0) {
+			if($line =~ /^\d\d:\d\d:\d\d,\d+ +--?> +\d\d:\d\d:\d\d,\d+/) {
+				$state = 1;
+				my ($tStart, $tEnd) = split(/ +--?> +/, $line);
+				($curStart, $tEnd) = (fromHMS($tStart), fromHMS($tEnd));
+				push(@inserTime, $curStart);
+				$inserSubs{$curStart} = '';
+				$inserEnds{$curStart} = $tEnd;
+			}
+			elsif($line ne '' && $line !~ /^\s*(\d+)\s*$/) {
+				print STDERR "Ignoring spurious line `${line}'\n" if($bVerbose);
+			}
+		}
+		elsif($state == 1) {
+			if($line eq '') {  # End of the sub
+				$state = 0;
+			}
+			else {
+				$inserSubs{$curStart} .= "${line}${LE}";
+			}
+		}
+	}
+}
+
+# Must be numerical sort!
+@insertInd = sort { $a <=> $b } @insertInd;
+@inserTime = sort { $a <=> $b } @inserTime;
+
 my $nCleaned = 0;
 my @starts = ();
 my @ends = ();
@@ -315,9 +375,8 @@ foreach my $file (@files) {
 	($bHasBOM,$encodingIn) = split(',',$enc);
 	binmode STDERR, ":encoding($encodingIn)";
 	if($bVerbose) {
-		print STDERR "Encoding for file `$file' detected as `$encodingIn'";
-		if($bHasBOM) { print STDERR ", with BOM\n"; }
-		else { print STDERR "\n"; }
+		print STDERR "Encoding for file `${file}' detected as `${encodingIn}'";
+		print STDERR ($bHasBOM ? ", with BOM\n" : "\n");
 	}
 	# Set the 'tri-state' to the input state if it is 'high impedance'.
 	if( $tSaveBOM < 0 ) {
@@ -336,8 +395,8 @@ foreach my $file (@files) {
 		$line =~ s/\r$//;
 		if($bFirst) {
 			$bFirst = 0;
-			if( $bHasBOM && $line =~ /^\x{feff}/ ) {
-				$line =~ s/^\x{feff}//; } # The BOM is unicode character U+FEFF, regardless of encoding
+			# The BOM is unicode character U+FEFF, regardless of encoding
+			$line =~ s/^\x{feff}// if($bHasBOM);
 		}
 		if( $state == 0 ) {
 			if( ($idxOld) = $line =~ /^\s*(\d+)\s*$/ ) { # Subtitle index
@@ -346,21 +405,27 @@ foreach my $file (@files) {
 					if( $#ends > -1 ) { $tm = $ends[$#ends]; }
 					push(@starts, $tm);
 					push(@ends, $tm);
-					push(@subs, "NEW SUB$LE");
+					push(@subs, "NEW SUBTITLE HERE${LE}");
 					shift(@insertInd);
 				}
 			}
 			elsif( $line =~ /^\d\d:\d\d:\d\d,\d+ +--?> +\d\d:\d\d:\d\d,\d+/ ) {
 				$state = 1;
-				my ($tStart,$tEnd) = split(/ +--?> +/, $line);
-				($tStart,$tEnd) = (fromHMS($tStart),fromHMS($tEnd));
-				while( $#inserTime > -1 && $tStart >= $inserTime[0] ) { # -j
+				my ($tStart, $tEnd) = split(/ +--?> +/, $line);
+				($tStart, $tEnd) = (fromHMS($tStart), fromHMS($tEnd));
+				while( $#inserTime > -1 && $tStart >= $inserTime[0] ) { # -j or -J
+					my $newStart = $inserTime[0];
 					my $tNext = $tStart;
-					if( $#inserTime > 0 && $tStart > $inserTime[1] ) {
-						$tNext = $inserTime[1]; }
-					push(@starts, $scale*$inserTime[0]+$offset);
-					push(@ends, $scale*$tNext+$offset);
-					push(@subs, "NEW SUB$LE");
+					$tNext = $inserTime[1] if( $#inserTime > 0 && $tStart > $inserTime[1] );
+					push(@starts, $scale*$newStart+$offset);
+					if( defined $inserSubs{$newStart} ) {
+						push(@ends, $scale*$inserEnds{$newStart}+$offset);
+						push(@subs, $inserSubs{$newStart});
+					}
+					else {
+						push(@ends, $scale*$tNext+$offset);
+						push(@subs, "NEW SUBTITLE HERE${LE}");
+					}
 					shift(@inserTime);
 				}
 
