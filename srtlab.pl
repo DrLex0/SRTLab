@@ -13,6 +13,7 @@
 #   better encoding detection; [Idiomdrottning] whitespace removal, -HH tweaks.
 # Version 0.98 (2017/09): rudimentary OCR error fix option
 # Version 0.99 (2021/06): added -J option, fixed incorrect ordering in -i, -j
+# Version 0.991 (WIP): added -d option
 #
 # Copyright (C) 2021  Alexander Thomas & Idiomdrottning
 #
@@ -35,7 +36,7 @@ use utf8;
 use Encode qw(decode encode);
 use Encode::Guess;
 
-my $VERSION = '0.99';
+my $VERSION = '0.991';
 
 # TODO: allow the user to override input encoding detection, or to configure it.
 # TODO: further improve -HH to remove more variants without breaking regular dialogue.
@@ -106,7 +107,8 @@ my $VERSION = '0.99';
 #===== Defaults =====#
 # Minimum ratio of seconds/#characters in a subtitle for length check.
 # This number is tuned for Dutch, it may be different for other languages.
-my $minRatio = .034;
+my $minRatioDefault = .034;
+my $minRatio = $minRatioDefault;
 # Maximum ratio of seconds/#characters, above which a subtitle will be
 # marked as 'sticky' if it appears longer than 3 seconds.
 my $stickRatio = .22;
@@ -168,6 +170,8 @@ sub printUsage
 	     ."    a higher risk to mess things up, so only use when necessary).\n"
 	     ."  -l: report subtitles that appear too briefly or overly long, or overlap.\n"
 	     ."  -L: report and attempt to repair subtitles that appear too briefly or overlap.\n"
+	     ."  -d D: use custom seconds/characters ratio for minimum subtitle length in -l\n"
+	     ."    and -L (default: ${minRatio}).\n"
 	     ."  -m: add BOM character to output file if it is Unicode.\n"
 	     ."  -M: do not add BOM character to output file (default is same as input).\n"
 	     ."  -r: maintain Redmond-style compatibility with typewriters (CRLF). If this\n"
@@ -266,6 +270,13 @@ while( $#ARGV >= 0 ) {
 			elsif( $sw eq 'L' ) {
 				$bCheckLength = 1;
 				$bFixLength = 1;
+			}
+			elsif( $sw eq 'd' ) {
+				$minRatio = shift;
+				if( ! defined($minRatio) || $minRatio !~ /^\d*\.?\d+$/ || $minRatio == 0 ) {
+					print STDERR "-d expects a positive floating-point number as next argument.\n";
+					exit(2);
+				}
 			}
 			elsif( $sw eq 'c' ) { $bClean = 1; }
 			elsif( $sw eq 'r' ) { $LE = "\r\n"; }
