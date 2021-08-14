@@ -124,6 +124,7 @@ my $LE = "\n";
 my ($bAuto,$bVerbose,$bClean,$bHasBOM);
 my $tSaveBOM = -1;
 my ($bCheckLength,$bFixLength,$bInPlace,$bTextOnly,$bNukeHA,$bNukeHarder,$bNukeURLs,$bWhitespace,$bFixOCR);
+my ($autoLsq, $autoAvg);
 my @insertInd;  # for -i
 my @inserTime;  # for -j and -J. Floating-point numbers.
 my %inserSubs;  # subtitle texts for -J
@@ -152,11 +153,16 @@ sub printUsage
 	     ."    FILMPAL:  0.96       = 24/25     (film framerate to PAL)\n"
 	     ."  -o O: offset all timestamps by time O.  Offset is added after scaling, i.e.\n"
 	     ."    new times are calculated as S*t+O.\n"
-	     ."  -a Ta1 Ta2 Tb1 Tb2: automatically calculate S and O.\n"
+	     ."  -a Ta1 Ta2 Tb1 Tb2: automatically calculate S and O from two pairs of times.\n"
 	     ."    Ta1 is the time at which a subtitle appears in the current SRT file, Ta2 is\n"
 	     ."    where it should appear in the output. The same for Tb1 and Tb2, for another\n"
 	     ."    subtitle.  For best accuracy, use the earliest and latest subtitles.\n"
 	     ."  -b Ta1 Ta2: like -a, but only calculate the offset O.\n"
+	     ."  -A F: automatically calculate S and O through a least-squares fit on multiple\n"
+	     ."    pairs of timestamps from a text file F. Each line must be a pair of stamps,\n"
+	     ."    separated by a space. The first stamp indicates when a subtitle currently\n"
+	     ."    appears and the second one when it should appear.\n"
+	     ."  -B F: like -A, but only calculate average offset from the pairs in file F.\n"
 	     ."  -i I: insert a new subtitle at index I (in the original file). This command\n"
 	     ."    can be repeated, e.g., to insert two subs at index 3, use -ii 3 3.\n"
 	     ."  -j J: insert a new subtitle at original time J (can be repeated as well).\n"
@@ -242,6 +248,20 @@ while( $#ARGV >= 0 ) {
 				$offset = fromHMS($Ta2)-fromHMS($Ta1);
 				$bAuto = 1;
 			}
+			elsif( $sw eq 'A') {
+				$autoLsq = shift;
+				if(! defined $autoLsq || ! -f $autoLsq || ! -r $autoLsq) {
+					print STDERR "-A expects a readable file as argument.\n";
+					exit(2);
+				}
+			}
+			elsif( $sw eq 'B') {
+				$autoAvg = shift;
+				if(! defined $autoAvg || ! -f $autoAvg || ! -r $autoAvg) {
+					print STDERR "-B expects a readable file as argument.\n";
+					exit(2);
+				}
+			}
 			elsif( $sw eq 'i' ) {
 				my $ind = shift;
 				if( ! defined($ind) || $ind !~ /^\d+$/ || $ind < 1 ) {
@@ -312,9 +332,23 @@ while( $#ARGV >= 0 ) {
 		push( @files, $arg ); }
 }
 
+if($autoLsq || $autoAvg) {
+	print STDERR "Warning: ignoring provided scale and/or offset because -A and -B options have precedence over -soab options.\n" if($scale != 1.0 || $offset != 0);
+	print STDERR "Warning: ignoring -B option because -A has precedence over it.\n" if($autoAvg && $autoLsq);
+	my $junk;
+	$bAuto = 1;
+	if($autoLsq) {
+		($junk, $scale, $offset) = getLSQ($autoLsq);
+	}
+	else {
+		$scale = 1.0;
+		($offset) = getLSQ($autoAvg);
+	}
+}
+
 if($bVerbose) {
 	if($bAuto) {
-		printf STDERR ("Automatically calculated scale $scale and offset %1.3f\n", $offset);
+		printf STDERR ("Automatically calculated scale %1.6f and offset %1.3f\n", $scale, $offset);
 	}
 	else {
 		print STDERR "Using scale $scale and offset $offset\n";
@@ -331,7 +365,7 @@ foreach my $file (@insFiles) {
 		print STDERR ($bHasBOM ? ", with BOM\n" : "\n");
 	}
 
-	open(FILE, "<:encoding($encodingIn)", $file) or die "Can't open file `${file}'\n";
+	open(FILE, "<:encoding($encodingIn)", $file) or die "Fatal: can't open file `${file}'\n";
 	my $state = 0;  # 0 = looking for next time stamp, 1 = inside sub
 	my $idxOld = 0;
 	my $bFirst = 1;
@@ -397,7 +431,7 @@ foreach my $file (@files) {
 	if( !defined($encodingOut) ) {
 		$encodingOut = $encodingIn; }
 
-	open( FILE, "<:encoding($encodingIn)", $file ) or die "Can't open file `$file'\n";
+	open( FILE, "<:encoding($encodingIn)", $file ) or die "Fatal: can't open file `$file'\n";
 	my $state = 0; # 0 = looking for next time stamp, 1 = inside sub
 	my $idxOld = 0;
 	my $bFirst = 1;
@@ -472,7 +506,7 @@ foreach my $file (@files) {
 }
 
 if($bInPlace) {
-	open FILE, ">:encoding($encodingOut)", $files[0] or die "Can't open file `$files[0]' for writing\n";
+	open FILE, ">:encoding($encodingOut)", $files[0] or die "Fatal: can't open file `$files[0]' for writing\n";
 	select(FILE);
 }
 
@@ -634,7 +668,7 @@ sub isHMS
 sub fromHMS
 {
 	my ($hms) = @_;
-	if( isFloat($hms) ) { return $hms; }
+	return $hms if(isFloat($hms));
 	my $neg = 1;
 	if( $hms =~ /^-/ ) {
 		$neg = -1;
@@ -684,6 +718,41 @@ sub fromScale
 	return $from/$to;
 }
 
+sub getLSQ
+{
+	# Calculates offset and scale from file with pairs of time stamps on each line,
+	# separated by whitespace. Returns list: (average offset, a, b) with a and b
+	# the parameters for linear transformation y = a*x + b.
+	my $fPath = shift;
+
+	open(my $fHandle ,'<', $fPath) or die "Fatal: can't read file '${fPath}': $!\n";
+	my @lines = <$fHandle>;
+	close($fHandle);
+	chomp(@lines);
+	my ($n, $xAvg, $yAvg, $sxy, $sx2) = (0) x 5;
+	foreach my $line (@lines) {
+		next if($line =~ /^\s*$/);
+		my ($x, $y) = split(/\s+/, $line);
+		if(! (isHMS($x) && isHMS($y))) {
+			print STDERR "Warning: ignoring malformed line in time stamps file: '${line}'\n";
+			next;
+		}
+		($x, $y) = (fromHMS($x), fromHMS($y));
+		$n++;
+		$xAvg += $x;
+		$yAvg += $y;
+		$sxy += $x * $y;
+		$sx2 += $x**2;
+	}
+	die "Fatal: too few pairs of time stamps in file '${fPath}', need at least 2.\n" if($n < 2);
+	$xAvg /= $n;
+	$yAvg /= $n;
+	my $d = $sx2/$n - $xAvg**2;
+	die "Fatal: degenerate set of time stamp pairs in file '${fPath}', cannot estimate offset or scale.\n" if($d == 0);
+	my $a = ($sxy/$n - $xAvg*$yAvg) / $d;
+	return ($yAvg - $xAvg, $a, $yAvg - $a * $xAvg);
+}
+
 sub sniffEncoding
 # 'Sniff' the encoding of a file, and the presence of a BOM character.
 # Return value is "$bHasBOM,$encoding".
@@ -702,7 +771,7 @@ sub sniffEncoding
 #   candidates to steer guess_encoding.
 {
 	my $fHandle;
-	open($fHandle, '<:bytes', $_[0]) or die "Can't open file `$_[0]'\n";
+	open($fHandle, '<:bytes', $_[0]) or die "Fatal: can't open file `$_[0]'\n";
 	my $line = <$fHandle>;
 	close($fHandle);
 
@@ -719,7 +788,7 @@ sub sniffEncoding
 	# No BOM found, try a more elaborate method. We need the entire file for
 	# this because we cannot just read any chunk without risking to truncate a
 	# multi-byte code point. Luckily, SRT files are never very big.
-	open($fHandle, '<:bytes', $_[0]) or die "Can't open file `$_[0]'\n";
+	open($fHandle, '<:bytes', $_[0]) or die "Fatal: can't open file `$_[0]'\n";
 	my ($data, $chunk) = ('', '');
 	while(read($fHandle, $chunk, 16384)) {
 		$data .= $chunk;

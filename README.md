@@ -1,13 +1,13 @@
 # SRTLab
 *SubRip subtitle file converter*<br>
 by Alexander Thomas, aka Dr. Lex (with contributions by Idiomdrottning)<br>
-Current version: 0.99<br>
+Current version: 0.991 (work in progress)<br>
 Contact: visit https://www.dr-lex.be/lexmail.html<br>
 &nbsp;&nbsp;&nbsp;&nbsp;or use my gmail address "doctor.lex".
 
 
 ## What is it?
-This is a Perl script that can perform certain operations on SubRip (.srt) subtitle files. For instance, it can scale and offset the time stamps of all subtitles based on two pairs of current and expected time values. It can also check files for subtitles that appear too briefly or overly long, and attempt to fix subs that appear too briefly (which is of course not always possible), as well as remove overlap between subtitles. It also has routines that attempt to remove annotations for the hearing impaired, if you want to convert such file to one with only dialog text. There is also a rudimentary fix for typical OCR errors in English subtitles.
+This is a Perl script that can perform certain operations on SubRip (.srt) subtitle files. For instance, it can scale and offset the time stamps of all subtitles based on pairs of current and expected time values. It can also check files for subtitles that appear too briefly or overly long, and attempt to fix subs that appear too briefly (which is of course not always possible), as well as remove overlap between subtitles. It also has routines that attempt to remove annotations for the hearing impaired, if you want to convert such file to one with only dialog text. There is also a rudimentary fix for typical OCR errors in English subtitles.
 
 It is a bit of a work in progress and I plan to add some more features, but I released it to the public since it is already useful in its current form.
 
