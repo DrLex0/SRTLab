@@ -120,6 +120,7 @@ my $gap = .08;
 
 my $scale = 1.0;
 my $offset = 0.0;
+my $extend = 0.0;
 my ($encodingIn,$encodingOut);
 my $LE = "\n";
 my ($bAuto,$bVerbose,$bClean,$bHasBOM);
@@ -175,6 +176,7 @@ sub printUsage
 	     ."    impaired, e.g., (CLEARS THROAT).  You should combine this with -c.\n"
 	     ."    Repeat -H to try to remove non-capitalized annotations (mind that this has\n"
 	     ."    a higher risk to mess things up, so only use when necessary).\n"
+	     ."  -k K: extend the duration of each subtitle by K (at most, if no overlap).\n"
 	     ."  -l: report subtitles that appear too briefly or overly long, or overlap.\n"
 	     ."  -L: report and attempt to repair subtitles that appear too briefly or overlap.\n"
 	     ."  -d D: use custom seconds/characters ratio for minimum subtitle length in -l\n"
@@ -286,6 +288,16 @@ while( $#ARGV >= 0 ) {
 					exit(2);
 				}
 				push(@insFiles, $xFile);
+			}
+			elsif( $sw eq 'k' ) {
+				$extend = shift;
+				if( ! defined($extend) || ! (isFloat($extend) || isHMS($extend)) ) {
+					print STDERR "-k expects a floating-point number or [-]HH:MM:SS.sss as next argument.\n";
+					exit(2);
+				}
+				if( isHMS($extend) ) {
+					$extend = fromHMS($extend);
+				}
 			}
 			elsif( $sw eq 'l' ) { $bCheckLength = 1; }
 			elsif( $sw eq 'L' ) {
@@ -590,6 +602,15 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 	if( $bClean && $subs[$s] =~ /^(<.>\n*<\/.>)?\n*$/ ) { # -c: Skip if empty
 		$nCleaned++;
 		next;
+	}
+	if($extend) {
+		my $newDur = $ends[$s] - $starts[$s] + $extend;
+		$newDur = 0 if($newDur < 0);
+		if($s < $#subs) {
+			my $nextGapStart = $starts[$s+1] - $gap;
+			$newDur = $nextGapStart - $starts[$s] if($starts[$s] + $newDur > $nextGapStart);
+		}
+		$ends[$s] = $starts[$s] + $newDur;
 	}
 	if($bCheckLength) {
 		# First, check for and optionally fix overlap
