@@ -13,7 +13,7 @@
 #   better encoding detection; [Idiomdrottning] whitespace removal, -HH tweaks.
 # Version 0.98 (2017/09): rudimentary OCR error fix option
 # Version 0.99 (2021/06): added -J option, fixed incorrect ordering in -i, -j
-# Version 0.991 (WIP): added -d option
+# Version 0.991 (WIP): added -d, -A, -B, -x, and -k options.
 #   Ignore style tags for -l and -L.
 #
 # Copyright (C) 2021  Alexander Thomas & Idiomdrottning
@@ -125,7 +125,7 @@ my ($encodingIn,$encodingOut);
 my $LE = "\n";
 my ($bAuto,$bVerbose,$bClean,$bHasBOM);
 my $tSaveBOM = -1;
-my ($bCheckLength,$bFixLength,$bInPlace,$bTextOnly,$bNukeHA,$bNukeHarder,$bNukeURLs,$bWhitespace,$bFixOCR);
+my ($bCheckLength,$bFixLength,$bInPlace,$bTextOnly,$bNukeHA,$bNukeHarder,$bNukeURLs,$bWhitespace,$bFixOCR,$bStyle);
 my ($autoLsq, $autoAvg);
 my @insertInd;  # for -i
 my @inserTime;  # for -j and -J. Floating-point numbers.
@@ -181,6 +181,7 @@ sub printUsage
 	     ."  -L: report and attempt to repair subtitles that appear too briefly or overlap.\n"
 	     ."  -d D: use custom seconds/characters ratio for minimum subtitle length in -l\n"
 	     ."    and -L (default: ${minRatio}).\n"
+	     ."  -x: report subtitles with bad style, like too many lines.\n"
 	     ."  -m: add BOM character to output file if it is Unicode.\n"
 	     ."  -M: do not add BOM character to output file (default is same as input).\n"
 	     ."  -r: maintain Redmond-style compatibility with typewriters (CRLF). If this\n"
@@ -311,6 +312,7 @@ while( $#ARGV >= 0 ) {
 					exit(2);
 				}
 			}
+			elsif( $sw eq 'x' ) { $bStyle = 1; }
 			elsif( $sw eq 'c' ) { $bClean = 1; }
 			elsif( $sw eq 'r' ) { $LE = "\r\n"; }
 			elsif( $sw eq 'u' ) { $encodingOut = 'UTF-8'; }
@@ -657,6 +659,12 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 			               $dur, $stickRatio*length($sub), toHMS($starts[$s]) );
 		}
 	}
+	if($bStyle) {
+		my $nLines = scalar(split(/\n/, $subs[$s]));
+		if($nLines > 2) {
+			printf STDERR ("Style: sub ${idxNew} has too many lines: %d (at %s)\n",
+			               $nLines, toHMS($starts[$s]));
+		}
 	}
 	if($bTextOnly) {
 		print $subs[$s] . $LE;
