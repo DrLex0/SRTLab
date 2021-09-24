@@ -14,6 +14,7 @@
 # Version 0.98 (2017/09): rudimentary OCR error fix option
 # Version 0.99 (2021/06): added -J option, fixed incorrect ordering in -i, -j
 # Version 0.991 (WIP): added -d option
+#   Ignore style tags for -l and -L.
 #
 # Copyright (C) 2021  Alexander Thomas & Idiomdrottning
 #
@@ -317,7 +318,7 @@ while( $#ARGV >= 0 ) {
 			elsif( $sw eq 'w' ) { $bWhitespace = 1; }
 			elsif( $sw eq 'v' ) { $bVerbose = 1; }
 			elsif( $sw eq 'V' ) {
-				print "SRTLab $VERSION by Alexander Thomas & Idiomdrottning\n";
+				print "SRTLab ${VERSION} by Alexander Thomas & Idiomdrottning\n";
 				exit(0);
 			}
 			elsif( $sw eq 'h' ) {
@@ -593,7 +594,8 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 	if($bCheckLength) {
 		# First, check for and optionally fix overlap
 		if( $s < $#subs && $starts[$s+1]-$ends[$s] < 0 ) {
-			print STDERR ("Sub $idxNew overlaps with next");
+			printf STDERR ("Sub ${idxNew} overlaps with next (at %s)",
+			               toHMS($starts[$s]));
 			if($bFixLength) {
 				$ends[$s] = $starts[$s+1]-$gap;
 				print STDERR " -> Fixed";
@@ -602,16 +604,17 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 		}
 
 		# Check the duration of a sub vs. the length of its 'canonical form'
-		my $sub = ']'.$subs[$s];
+		my $sub = ']'. $subs[$s];
+		$sub =~ s/<.+?>//g;
 		$sub =~ s/\s\s+/ /g;
 		$sub =~ s/\s?$LE/]/g;
 		$sub =~ s/\]\s/]/g;
 		$sub =~ s/\.\.\././g;
-		my $dur = $ends[$s]-$starts[$s];
+		my $dur = $ends[$s] - $starts[$s];
 		my $okDur = $minRatio*length($sub);
-		if( $okDur < $minDur ) { $okDur = $minDur; }
+		$okDur = $minDur if($okDur < $minDur);
 		if( $dur < $okDur ) {
-			printf STDERR ("Sub $idxNew too fast: %.2f < %.2f (at %s)",
+			printf STDERR ("Sub ${idxNew} too fast: %.2f < %.2f (at %s)",
 			               $dur, $okDur, toHMS($starts[$s]) );
 			if($bFixLength) {
 				my $newEnd = $starts[$s]+1.05*$okDur;
@@ -629,8 +632,10 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 			print STDERR "\n";
 		}
 		elsif( $dur > 3 && $dur > $stickRatio*length($sub) ) {
-			printf STDERR ("Sub $idxNew seems sticky: %.2f secs, expected %.2f (at %s)\n",
-			               $dur, $stickRatio*length($sub), toHMS($starts[$s]) ); }
+			printf STDERR ("Sub ${idxNew} seems sticky: %.2f secs, expected %.2f (at %s)\n",
+			               $dur, $stickRatio*length($sub), toHMS($starts[$s]) );
+		}
+	}
 	}
 	if($bTextOnly) {
 		print $subs[$s] . $LE;
