@@ -479,8 +479,8 @@ That's kind of interesting.
 
 108
 00:16:01,877 --> 00:16:03,962
-Coffee time.
-Yo!
+- Coffee time.
+- Yo!
 
 109
 00:16:04,713 --> 00:16:07,340
@@ -796,7 +796,7 @@ Grand Central Station!
 
 180
 00:23:57,686 --> 00:24:00,688
-- It's only the bug man.
+It's only the bug man.
 
 181
 00:24:28,675 --> 00:24:30,593
@@ -965,7 +965,7 @@ My dad drinks Bud.
 218
 00:28:06,434 --> 00:28:09,687
 - King of beers.
--  Ladies and gentlemen,
+- Ladies and gentlemen,
 
 219
 00:28:09,854 --> 00:28:14,024
@@ -1352,7 +1352,7 @@ Don't you fuckin' look at me!
 
 306
 00:45:42,489 --> 00:45:46,075
-- Look at me. Daddy's coming home.
+Look at me. Daddy's coming home.
 
 307
 00:45:49,288 --> 00:45:50,747
@@ -2263,7 +2263,7 @@ OK.
 522
 01:10:56,794 --> 01:10:58,503
 - Are you sure?
-Hey!
+- Hey!
 
 523
 01:11:01,674 --> 01:11:03,174
@@ -2701,7 +2701,7 @@ Donny! Donny!
 
 624
 01:18:32,749 --> 01:18:34,792
-- Oh, Donny!
+Oh, Donny!
 
 625
 01:18:35,752 --> 01:18:39,964
@@ -2789,7 +2789,7 @@ He said "What?", Frank.
 
 645
 01:21:46,985 --> 01:21:49,570
-- What.
+What.
 
 646
 01:21:55,035 --> 01:21:58,245
@@ -2901,7 +2901,7 @@ You're fuckin' lucky to be alive.
 
 671
 01:24:25,894 --> 01:24:28,812
-- Look at me.
+Look at me.
 
 672
 01:24:36,654 --> 01:24:38,739
@@ -2942,31 +2942,31 @@ I'll send you straight to hell, fucker!
 
 681
 01:25:22,325 --> 01:25:24,952
-- In dreams...
+In dreams...
 
 682
 01:25:26,704 --> 01:25:28,205
-- ...I walk with you.
+...I walk with you.
 
 683
 01:25:29,082 --> 01:25:34,878
-- In dreams... I talk... to you.
+In dreams... I talk... to you.
 
 684
 01:25:35,880 --> 01:25:40,884
-- In dreams... you're mine.
+In dreams... you're mine.
 
 685
 01:25:41,052 --> 01:25:44,388
-- All...
+All...
 
 686
 01:25:48,518 --> 01:25:53,397
-- Forever in dreams.
+Forever in dreams.
 
 687
 01:26:04,826 --> 01:26:09,413
-- Feel this.
+Feel this.
 
 688
 01:26:21,467 --> 01:26:24,261
@@ -3189,11 +3189,11 @@ Yes, sir.
 737
 01:33:24,849 --> 01:33:28,560
 - You didn't tell him about me?
-No. Shh.
+- No. Shh.
 
 738
 01:33:28,728 --> 01:33:31,855
-- Why did I ever get you going on this?
+Why did I ever get you going on this?
 
 739
 01:33:35,526 --> 01:33:39,571
@@ -3223,7 +3223,7 @@ There better be nothin' wrong.
 
 745
 01:35:04,198 --> 01:35:05,323
-- Let's see.
+Let's see.
 
 746
 01:35:06,784 --> 01:35:09,119
@@ -3390,7 +3390,7 @@ They're gonna hit us.
 
 783
 01:40:26,854 --> 01:40:28,271
-- Move it!
+Move it!
 
 784
 01:40:28,439 --> 01:40:29,605
@@ -3524,7 +3524,7 @@ Dad? Mom?
 
 813
 01:42:32,729 --> 01:42:35,273
-I'm in here, honey.
+- I'm in here, honey.
 - Mom!
 
 814
@@ -3658,7 +3658,7 @@ I'm falling! Hold me!
 844
 01:45:12,681 --> 01:45:18,144
 - You lied to me.
-Sandy, please, forgive me.
+- Sandy, please, forgive me.
 
 845
 01:45:18,312 --> 01:45:20,229
@@ -3854,11 +3854,11 @@ You're one sorry piece of shit, mister.
 
 889
 01:53:35,016 --> 01:53:38,936
-- Hey, pretty, pretty!
+Hey, pretty, pretty!
 
 890
 01:53:39,103 --> 01:53:41,647
-- Whoo-oo!
+Whoo-oo!
 
 891
 01:53:46,402 --> 01:53:50,405
@@ -3875,7 +3875,7 @@ It's all over, Jeffrey.
 
 894
 01:56:46,624 --> 01:56:50,210
-Jeffrey, lunch is ready.
+- Jeffrey, lunch is ready.
 - OK.
 
 895

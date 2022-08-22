@@ -6426,3 +6426,22 @@ Where...?
 02:19:44,667 --> 02:19:47,669
 [BALLROOM MUSlC PLAYlNG]
 
+1475
+02:20:00,000 --> 02:20:02,000
+Am l?
+Me, myself and l!
+
+1476
+02:20:03,000 --> 02:20:05,000
+This is normal
+and should not be corrected.
+
+1477
+02:20:06,000 --> 02:20:09,000
+lllusions, Mr. Anderson.
+Vagaries of perception.
+
+1475
+02:20:10,000 --> 02:20:13,000
+Some OCR software really likes dots... .
+Or with a Unicode ellipsis… .

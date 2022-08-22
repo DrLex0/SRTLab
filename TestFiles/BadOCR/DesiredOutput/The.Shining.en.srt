@@ -1953,7 +1953,7 @@ some ice cream while we wait?
 
 436
 00:28:38,800 --> 00:28:41,427
-Yeah.
+- Yeah.
 -Okay, you behave yourself.
 
 437
@@ -1994,7 +1994,7 @@ know anybody was ever here.
 
 445
 00:29:09,497 --> 00:29:11,540
-Just like a ghost ship, huh?
+- Just like a ghost ship, huh?
 -Yes.
 
 446
@@ -2477,7 +2477,7 @@ Loser has to keep America clean.
 
 555
 00:38:20,381 --> 00:38:22,340
-Oh, no!
+- Oh, no!
 - Keep America clean.
 
 556
@@ -6146,4 +6146,24 @@ Danny!
 1416
 02:17:40,585 --> 02:17:42,002
 Where...?
+
+1417
+02:20:00,000 --> 02:20:02,000
+Am I?
+Me, myself and I!
+
+1418
+02:20:03,000 --> 02:20:05,000
+This is normal
+and should not be corrected.
+
+1419
+02:20:06,000 --> 02:20:09,000
+Illusions, Mr. Anderson.
+Vagaries of perception.
+
+1420
+02:20:10,000 --> 02:20:13,000
+Some OCR software really likes dots...
+Or with a Unicode ellipsis…
 

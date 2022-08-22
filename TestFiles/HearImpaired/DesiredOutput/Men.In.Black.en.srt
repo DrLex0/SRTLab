@@ -67,7 +67,7 @@ INS, Division 6.
 
 16
 00:04:24,515 --> 00:04:27,017
-- Division 6?
+Division 6?
 I never heard of Division 6.
 
 17
@@ -459,7 +459,7 @@ Let me talk to you. Hey! Hey!
 
 102
 00:12:48,560 --> 00:12:50,687
-- I go out, I work
+I go out, I work
 my butt off to make a living.
 
 103
@@ -524,7 +524,7 @@ back in the house.
 
 116
 00:13:53,834 --> 00:13:57,254
-- Place projectile
+Place projectile
 weapon on the ground.
 
 117
@@ -686,7 +686,7 @@ Hey, wait a minute.
 
 151
 00:17:15,285 --> 00:17:17,037
-- Excuse me,
+Excuse me,
 you're Dr. Weaver
 
 152
@@ -765,12 +765,12 @@ That's double tough.
 
 168
 00:18:20,100 --> 00:18:24,687
-- So who exactly are you with?
+So who exactly are you with?
 FBI? NSA?
 
 169
 00:18:24,854 --> 00:18:26,981
-- I'm part of a bureau
+I'm part of a bureau
 that licenses, monitors
 
 170
@@ -1224,7 +1224,7 @@ Wanna get down on this?
 
 265
 00:27:23,225 --> 00:27:25,561
-- Edwards,
+Edwards,
 what the hell happened?
 
 266
@@ -1238,12 +1238,12 @@ little Tiffany deserved to die?
 
 268
 00:27:33,361 --> 00:27:36,155
-- Well, she was the only one that
+Well, she was the only one that
 actually seemed dangerous at the time, sir.
 
 269
 00:27:36,322 --> 00:27:37,490
-- How'd you come
+How'd you come
 to that conclusion?
 
 270
@@ -1381,7 +1381,7 @@ establishing contact with a race not of this planet.
 
 298
 00:29:31,687 --> 00:29:35,065
-- If you'll look directly at the end of
+If you'll look directly at the end of
 this device, we'll administer the eye test.
 
 299
@@ -1445,7 +1445,7 @@ evidence of their landing.
 
 311
 00:30:08,015 --> 00:30:10,434
-- Uh-huh. So these
+Uh-huh. So these
 are real flying saucers
 
 312
@@ -1519,7 +1519,7 @@ Viennese cinnamon.
 
 326
 00:30:50,724 --> 00:30:53,060
-- Don't tell me we only got that
+Don't tell me we only got that
 powdered stuff for cream again.
 
 327
@@ -1720,7 +1720,7 @@ they mean precisely dick.
 
 369
 00:34:33,030 --> 00:34:35,616
-- Duration of stay?
+Duration of stay?
 Lunch.
 
 370
@@ -1729,7 +1729,7 @@ Any fruits or vegetables?
 
 371
 00:34:43,624 --> 00:34:47,628
-- <i>Please meet your
+<i>Please meet your
 party outside the containment area.</i>
 
 372
@@ -1811,7 +1811,7 @@ Hey, what's this thing?
 
 388
 00:35:35,884 --> 00:35:38,387
-- Okay, just be calm.
+Okay, just be calm.
 Just be... Relax.
 
 389
@@ -1852,7 +1852,7 @@ It was a accident. Sorry.
 
 397
 00:36:21,388 --> 00:36:23,515
-- Observation, the heart
+Observation, the heart
 of our little endeavor.
 
 398
@@ -1935,7 +1935,7 @@ The last suit you'll ever wear.
 
 415
 00:37:28,914 --> 00:37:31,541
-- <i>You will dress only in
+<i>You will dress only in
 attire specially sanctioned</i>
 
 416
@@ -2010,7 +2010,7 @@ over it, beyond it.</i>
 
 431
 00:38:29,266 --> 00:38:32,561
-- You know what the difference
+You know what the difference
 is between you and me?
 
 432
@@ -2439,7 +2439,7 @@ like to talk to you about your visitor.
 
 523
 00:46:26,367 --> 00:46:27,952
-- You here to
+You here to
 make fun of me too?
 
 524
@@ -2638,7 +2638,7 @@ in here quick because, damn.
 
 564
 00:48:55,016 --> 00:48:56,309
-- Yo, Kay, look,
+Yo, Kay, look,
 check it out, man.
 
 565
@@ -2845,7 +2845,7 @@ unlike anything I've ever seen before.
 
 608
 00:51:58,157 --> 00:51:59,742
-- All right,
+All right,
 I'll have a look at this one.
 
 609
@@ -3046,7 +3046,7 @@ go look at that thing.
 
 651
 00:54:14,335 --> 00:54:16,337
-- Dr. White?
+Dr. White?
 You recognize him?
 
 652
@@ -3318,7 +3318,7 @@ Where is it?
 
 711
 00:58:30,424 --> 00:58:33,552
-- <i>Will the owner
+<i>Will the owner
 of a blue warp-speed cruiser</i>
 
 712
@@ -3621,7 +3621,7 @@ We got his ship.
 
 776
 01:04:43,422 --> 01:04:45,757
-- Excuse me. Excuse me,
+Excuse me. Excuse me,
 ladies and gentlemen.
 
 777
@@ -3706,12 +3706,12 @@ and that's what made the...
 
 795
 01:05:58,080 --> 01:06:01,583
-- All right, kid.
+All right, kid.
 Excuse me. What's up?
 
 796
 01:06:01,750 --> 01:06:04,628
-- The Arquillians want the Galaxy,
+The Arquillians want the Galaxy,
 whatever the hell that means.
 
 797
@@ -3730,7 +3730,7 @@ hasn't skipped town.
 
 800
 01:06:12,302 --> 01:06:15,222
-- Can I have
+Can I have
 your attention, please? Thank you.
 
 801
@@ -3781,7 +3781,7 @@ The dog owes my friend money.
 
 811
 01:06:52,467 --> 01:06:54,261
-- Arquillians and bugs,
+Arquillians and bugs,
 Frank, what do you know?
 
 812
@@ -4018,7 +4018,7 @@ Two minutes.
 
 862
 01:10:45,367 --> 01:10:48,203
-- Where's the animal?
+Where's the animal?
 I told you, I don't know.
 
 863
@@ -4210,7 +4210,7 @@ space trash we got locked in the office?
 
 902
 01:13:13,348 --> 01:13:15,850
-- It's okay, Laurel.
+It's okay, Laurel.
 How is it okay?
 
 903
@@ -4337,7 +4337,7 @@ Aw, that's bullshit.
 
 930
 01:15:45,166 --> 01:15:47,293
-- Look, kid, to keep
+Look, kid, to keep
 the bugs from getting it,
 
 931
@@ -4356,12 +4356,12 @@ Heh-heh. Sucks, huh?
 
 934
 01:15:58,930 --> 01:16:01,641
-- I'm pulling up the location of every
+I'm pulling up the location of every
 interstellar vehicle within a hundred miles.
 
 935
 01:16:01,808 --> 01:16:03,935
-- Already did it. Frank
+Already did it. Frank
 the Pug took the last ship.
 
 936
@@ -4524,7 +4524,7 @@ it could start a war.
 
 970
 01:18:45,304 --> 01:18:47,849
-- Good, war. That means
+Good, war. That means
 more food for my family.
 
 971
@@ -4534,7 +4534,7 @@ of mouths to feed, Your Highness.
 
 972
 01:18:51,477 --> 01:18:54,147
-- You're a wonderful
+You're a wonderful
 dad, but I'm staying here.
 
 973
@@ -4551,7 +4551,7 @@ They don't check out.
 
 976
 01:19:29,223 --> 01:19:33,227
-- <i>Warning: Eight
+<i>Warning: Eight
 minutes to the destruction of Earth.</i>
 
 977
@@ -4602,7 +4602,7 @@ Section 4153 of the Tycho Treaty.
 
 987
 01:21:51,824 --> 01:21:54,368
-- So hand over whatever
+So hand over whatever
 galaxy you might be carrying,
 
 988

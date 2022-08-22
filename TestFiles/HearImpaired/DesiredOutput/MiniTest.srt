@@ -1,11 +1,11 @@
 1
 00:04:52,917 --> 00:04:55,294
-No, l ain't, Mrs. Torrance.
+No, I ain't, Mrs. Torrance.
 
 2
 00:12:09,437 --> 00:12:12,147
-- Now, hold your eyes still
-so l can see.
+Now, hold your eyes still
+so I can see.
 
 3
 00:23:29,491 --> 00:23:31,617
@@ -16,30 +16,47 @@ When was the Overlook built?
 Yes.
 
 5
-00:52:27,936 --> 00:52:29,436
-l won't, Mom.
+00:38:20,381 --> 00:38:22,340
+- Oh, no!
+- Keep America clean.
 
 6
-00:52:32,190 --> 00:52:34,191
-...because l'm going to
-make lunch soon.
+00:52:27,936 --> 00:52:29,436
+I won't, Mom.
 
 7
+00:52:32,190 --> 00:52:34,191
+...because I'm going to
+make lunch soon.
+
+8
 00:52:35,068 --> 00:52:37,820
 -Okay?
 - Okay, Mom.
 
-8
+9
 01:16:39,177 --> 01:16:43,014
-- We're sorry.
+We're sorry.
 Your call cannot be completed as dialed.
 
-9
+10
+01:16:43,114 --> 01:16:49,077
+This is a poorly made subtitle.
+Subtitles should not have more than 2 lines,
+but fixing this automatically is very hard.
+
+11
 01:16:49,177 --> 01:16:53,014
+- Let's see if this awful regex
+also works with 2 people in the same subtitle.
+- Yeah, let's!
+
+12
+01:16:53,177 --> 01:16:55,014
 This tool has
 one purpose, and one purpose only:
 
-10
-01:16:53,177 --> 01:16:55,014
+13
+01:16:55,114 --> 01:16:57,114
 To obliterate crappy SRT files.
 
