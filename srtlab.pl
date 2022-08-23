@@ -135,64 +135,66 @@ my %inserEnds;  # subtitle end times for -J. Floating-point numbers.
 
 sub printUsage
 {
-	#      12345678901234567890123456789012345678901234567890123456789012345678901234567890
-	print "srtlab [options] file1.srt [file2.srt ...] > output.srt\n"
-	     ."SRT file editing tool.\n"
-	     ."  Multiple input files are joined sequentially. Make sure that the first\n"
-	     ."    timestamp of each file comes after the last stamp of the previous.\n"
-	     ."Options:\n"
-	     ."  Time values must be in the format [-]HH:MM:SS.sss, or a floating-point number\n"
-	     ."    representing seconds.\n"
-	     ."  -e: in-place editing: overwrite first file instead of printing to stdout\n"
-	     ."    (BE CAREFUL!)\n"
-	     ."  -c: remove empty subtitles (empty = really empty, no whitespace characters).\n"
-	     ."  -s S: scale all timestamps.\n"
-	     ."    S can be a floating-point number or any of these shortcuts:\n"
-	     ."    NTSCPAL:  0.95904    = 23.976/25 (subs for NTSC framerate to PAL video)\n"
-	     ."    PALNTSC:  1.04270938 = 25/23.976 (PAL framerate to NTSC)\n"
-	     ."    NTSCFILM: 0.999      = 23.976/24 (NTSC framerate to film)\n"
-	     ."    PALFILM:  1.04166667 = 25/24     (PAL framerate to film)\n"
-	     ."    FILMNTSC: 1.001001   = 24/23.976 (film framerate to NTSC)\n"
-	     ."    FILMPAL:  0.96       = 24/25     (film framerate to PAL)\n"
-	     ."  -o O: offset all timestamps by time O.  Offset is added after scaling, i.e.\n"
-	     ."    new times are calculated as S*t+O.\n"
-	     ."  -a Ta1 Ta2 Tb1 Tb2: automatically calculate S and O from two pairs of times.\n"
-	     ."    Ta1 is the time at which a subtitle appears in the current SRT file, Ta2 is\n"
-	     ."    where it should appear in the output. The same for Tb1 and Tb2, for another\n"
-	     ."    subtitle.  For best accuracy, use the earliest and latest subtitles.\n"
-	     ."  -b Ta1 Ta2: like -a, but only calculate the offset O.\n"
-	     ."  -A F: automatically calculate S and O through a least-squares fit on multiple\n"
-	     ."    pairs of timestamps from a text file F. Each line must be a pair of stamps,\n"
-	     ."    separated by a space. The first stamp indicates when a subtitle currently\n"
-	     ."    appears and the second one when it should appear.\n"
-	     ."  -B F: like -A, but only calculate average offset from the pairs in file F.\n"
-	     ."  -i I: insert a new subtitle at index I (in the original file). This command\n"
-	     ."    can be repeated, e.g., to insert two subs at index 3, use -ii 3 3.\n"
-	     ."  -j J: insert a new subtitle at original time J (can be repeated as well).\n"
-	     ."  -J file.srt: insert subtitles from the given SRT file, using their timestamps\n"
-	     ."    relative to the original times of the other input files.\n"
-	     ."  -f: try to fix common OCR errors (tuned for English only). This may help to\n"
-	     ."    obtain a better result with -H.\n"
-	     ."  -H: attempt to remove typical non-verbal annotations in subs for the hearing\n"
-	     ."    impaired, e.g., (CLEARS THROAT).  You should combine this with -c.\n"
-	     ."    Repeat -H to try to remove non-capitalized annotations (mind that this has\n"
-	     ."    a higher risk to mess things up, so only use when necessary).\n"
-	     ."  -k K: extend the duration of each subtitle by K (at most, if no overlap).\n"
-	     ."  -l: report subtitles that appear too briefly or overly long, or overlap.\n"
-	     ."  -L: report and attempt to repair subtitles that appear too briefly or overlap.\n"
-	     ."  -d D: use custom seconds/characters ratio for minimum subtitle length in -l\n"
-	     ."    and -L (default: ${minRatio}).\n"
-	     ."  -x: report subtitles with bad style, like too many lines.\n"
-	     ."  -m: add BOM character to output file if it is Unicode.\n"
-	     ."  -M: do not add BOM character to output file (default is same as input).\n"
-	     ."  -r: maintain Redmond-style compatibility with typewriters (CRLF). If this\n"
-	     ."    option is not enabled, any existing CR will be obliterated.\n"
-	     ."  -u: save output in UTF-8.\n"
-	     ."  -U: erase all subtitles that have a URL in them (should combine with -c).\n"
-	     ."  -w: Strip whitespace from beginning and end of lines\n"
-	     ."  -t: strip all SRT formatting and only output the text.\n"
-	     ."  -v: verbose mode.\n"
-	     ."  -V: print version and exit.\n";
+#2345678901234567890123456789012345678901234567890123456789012345678901234567890
+	print <<__END__;
+srtlab [options] file1.srt [file2.srt ...] > output.srt
+SRT file editing tool.
+  Multiple input files are joined sequentially. Make sure that the first
+    timestamp of each file comes after the last stamp of the previous.
+Options:
+  Time values must be in the format [-]HH:MM:SS.sss, or a floating-point number
+    representing seconds.
+  -e: in-place editing: overwrite first file instead of printing to stdout
+    (BE CAREFUL!)
+  -c: remove empty subtitles (empty = really empty, no whitespace characters).
+  -s S: scale all timestamps.
+    S can be a floating-point number or any of these shortcuts:
+    NTSCPAL:  0.95904    = 23.976/25 (subs for NTSC framerate to PAL video)
+    PALNTSC:  1.04270938 = 25/23.976 (PAL framerate to NTSC)
+    NTSCFILM: 0.999      = 23.976/24 (NTSC framerate to film)
+    PALFILM:  1.04166667 = 25/24     (PAL framerate to film)
+    FILMNTSC: 1.001001   = 24/23.976 (film framerate to NTSC)
+    FILMPAL:  0.96       = 24/25     (film framerate to PAL)
+  -o O: offset all timestamps by time O.  Offset is added after scaling, i.e.
+    new times are calculated as S*t+O.
+  -a Ta1 Ta2 Tb1 Tb2: automatically calculate S and O from two pairs of times.
+    Ta1 is the time at which a subtitle appears in the current SRT file, Ta2 is
+    where it should appear in the output. The same for Tb1 and Tb2, for another
+    subtitle.  For best accuracy, use the earliest and latest subtitles.
+  -b Ta1 Ta2: like -a, but only calculate the offset O.
+  -A F: automatically calculate S and O through a least-squares fit on multiple
+    pairs of timestamps from a text file F. Each line must be a pair of stamps,
+    separated by a space. The first stamp indicates when a subtitle currently
+    appears and the second one when it should appear.
+  -B F: like -A, but only calculate average offset from the pairs in file F.
+  -i I: insert a new subtitle at index I (in the original file). This command
+    can be repeated, e.g., to insert two subs at index 3, use -ii 3 3.
+  -j J: insert a new subtitle at original time J (can be repeated as well).
+  -J file.srt: insert subtitles from the given SRT file, using their timestamps
+    relative to the original times of the other input files.
+  -f: try to fix common OCR errors (tuned for English only). This may help to
+    obtain a better result with -H.
+  -H: attempt to remove typical non-verbal annotations in subs for the hearing
+    impaired, e.g., (CLEARS THROAT).  You should combine this with -c.
+    Repeat -H to try to remove non-capitalized annotations (mind that this has
+    a higher risk to mess things up, so only use when necessary).
+  -k K: extend the duration of each subtitle by K (at most, if no overlap).
+  -l: report subtitles that appear too briefly or overly long, or overlap.
+  -L: report and attempt to repair subtitles that appear too briefly or overlap.
+  -d D: use custom seconds/characters ratio for minimum subtitle length in -l
+    and -L (default: ${minRatio}).
+  -x: report subtitles with bad style, like too many lines.
+  -m: add BOM character to output file if it is Unicode.
+  -M: do not add BOM character to output file (default is same as input).
+  -r: maintain Redmond-style compatibility with typewriters (CRLF). If this
+    option is not enabled, any existing CR will be obliterated.
+  -u: save output in UTF-8.
+  -U: erase all subtitles that have a URL in them (should combine with -c).
+  -w: Strip whitespace from beginning and end of lines
+  -t: strip all SRT formatting and only output the text.
+  -v: verbose mode.
+  -V: print version and exit.
+__END__
 }
 
 
@@ -341,7 +343,7 @@ while( $#ARGV >= 0 ) {
 				exit(0);
 			}
 			else {
-				print STDERR "Ignoring unknown switch -$sw\n"; }
+				print STDERR "Ignoring unknown switch -${sw}\n"; }
 		}
 	}
 	else {
@@ -367,7 +369,7 @@ if($bVerbose) {
 		printf STDERR ("Automatically calculated scale %1.6f and offset %1.3f\n", $scale, $offset);
 	}
 	else {
-		print STDERR "Using scale $scale and offset $offset\n";
+		print STDERR "Using scale ${scale} and offset ${offset}\n";
 	}
 }
 
@@ -377,11 +379,11 @@ foreach my $file (@insFiles) {
 	my $enc = sniffEncoding($file);
 	($bHasBOM, $encodingIn) = split(',', $enc);
 	if($bVerbose) {
-		print STDERR "Encoding for file `${file}' detected as `${encodingIn}'";
+		print STDERR "Encoding for file '${file}' detected as '${encodingIn}'";
 		print STDERR ($bHasBOM ? ", with BOM\n" : "\n");
 	}
 
-	open(FILE, "<:encoding($encodingIn)", $file) or die "Fatal: can't open file `${file}'\n";
+	open(FILE, "<:encoding($encodingIn)", $file) or die "Fatal: can't open file '${file}'\n";
 	my $state = 0;  # 0 = looking for next time stamp, 1 = inside sub
 	my $idxOld = 0;
 	my $bFirst = 1;
@@ -405,7 +407,7 @@ foreach my $file (@insFiles) {
 				$inserEnds{$curStart} = $tEnd;
 			}
 			elsif($line ne '' && $line !~ /^\s*(\d+)\s*$/) {
-				print STDERR "Ignoring spurious line `${line}'\n" if($bVerbose);
+				print STDERR "Ignoring spurious line '${line}'\n" if($bVerbose);
 			}
 		}
 		elsif($state == 1) {
@@ -437,7 +439,7 @@ foreach my $file (@files) {
 	($bHasBOM,$encodingIn) = split(',',$enc);
 	binmode STDERR, ":encoding($encodingIn)";
 	if($bVerbose) {
-		print STDERR "Encoding for file `${file}' detected as `${encodingIn}'";
+		print STDERR "Encoding for file '${file}' detected as '${encodingIn}'";
 		print STDERR ($bHasBOM ? ", with BOM\n" : "\n");
 	}
 	# Set the 'tri-state' to the input state if it is 'high impedance'.
@@ -447,7 +449,7 @@ foreach my $file (@files) {
 	if( !defined($encodingOut) ) {
 		$encodingOut = $encodingIn; }
 
-	open( FILE, "<:encoding($encodingIn)", $file ) or die "Fatal: can't open file `$file'\n";
+	open( FILE, "<:encoding($encodingIn)", $file ) or die "Fatal: can't open file '${file}'\n";
 	my $state = 0; # 0 = looking for next time stamp, 1 = inside sub
 	my $idxOld = 0;
 	my $bFirst = 1;
@@ -502,7 +504,7 @@ foreach my $file (@files) {
 					exit(1);
 				}
 				if($bVerbose) {
-					print STDERR "Ignoring spurious line `$line'\n"; }
+					print STDERR "Ignoring spurious line '${line}'\n"; }
 			}
 		}
 		elsif( $state == 1 ) {
@@ -522,7 +524,7 @@ foreach my $file (@files) {
 }
 
 if($bInPlace) {
-	open FILE, ">:encoding($encodingOut)", $files[0] or die "Fatal: can't open file `$files[0]' for writing\n";
+	open FILE, ">:encoding($encodingOut)", $files[0] or die "Fatal: can't open file '${files[0]}' for writing\n";
 	select(FILE);
 }
 
@@ -706,7 +708,7 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 		print $subs[$s] . $LE;
 	}
 	else {
-		print "$idxNew$LE".
+		print "${idxNew}${LE}".
 		      toHMS($starts[$s]) .' --> '. toHMS($ends[$s]) . $LE .
 		      $subs[$s] . $LE;
 	}
@@ -714,7 +716,7 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 }
 
 if( $bClean && $bVerbose) {
-	print STDERR "Removed $nCleaned empty subtitles.\n";
+	print STDERR "Removed ${nCleaned} empty subtitles.\n";
 }
 if( $ocrFixes && $bVerbose ) {
 	print STDERR "Fixed ${ocrFixes} subtitles with presumed OCR errors.\n";
@@ -767,7 +769,7 @@ sub toHMS
 	my $h = int($ip/3600);
 	my $hms = sprintf("%02d:%02d:%06.3f", $h,$m,$s);
 	$hms =~ s/\./,/;
-	return "$neg$hms";
+	return "${neg}${hms}";
 }
 
 sub isScale
@@ -841,7 +843,7 @@ sub sniffEncoding
 #   candidates to steer guess_encoding.
 {
 	my $fHandle;
-	open($fHandle, '<:bytes', $_[0]) or die "Fatal: can't open file `$_[0]'\n";
+	open($fHandle, '<:bytes', $_[0]) or die "Fatal: can't open file '$_[0]'\n";
 	my $line = <$fHandle>;
 	close($fHandle);
 
@@ -858,7 +860,7 @@ sub sniffEncoding
 	# No BOM found, try a more elaborate method. We need the entire file for
 	# this because we cannot just read any chunk without risking to truncate a
 	# multi-byte code point. Luckily, SRT files are never very big.
-	open($fHandle, '<:bytes', $_[0]) or die "Fatal: can't open file `$_[0]'\n";
+	open($fHandle, '<:bytes', $_[0]) or die "Fatal: can't open file '$_[0]'\n";
 	my ($data, $chunk) = ('', '');
 	while(read($fHandle, $chunk, 16384)) {
 		$data .= $chunk;
