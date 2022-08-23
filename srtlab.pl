@@ -15,6 +15,7 @@
 # Version 0.99 (2021/06): added -J option, fixed incorrect ordering in -i, -j
 # Version 0.991 (WIP): added -d, -A, -B, -x, and -k options.
 #   Ignore style tags for -l and -L.
+#   OCR fixing and HI annotation removal improvements.
 #
 # Copyright (C) 2021  Alexander Thomas & Idiomdrottning
 #
@@ -544,10 +545,15 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 		# identical in sans-serif fonts, and the lack of smartness in OCR programs.
 		my $orig = $subs[$s];
 
+		# \/ is usually a broken V (or part of a broken W)
+		$subs[$s] =~ s/\\\//V/g;
+		# || is likely ll.
+		$subs[$s] =~ s/\|\|/ll/gi;
+
 		# Fix "I ", "I'", "If", "In", "Is", and "It" and any words starting with the latter
 		# (AFAIK there are no words in English starting with "ln", "ls", etc).
 		# Take care not to break e.g. "nice-looking", so don't just assume '-' marks a new word.
-		$subs[$s] =~ s/(^-?|\s-?|[.…"“])l([ '’.,fnst]|$)/$1I$2/gm;
+		$subs[$s] =~ s/(^-?|\s-?|[.…"“])l([ '’.,\?!fnst]|ll|$)/$1I$2/gm;
 		# OCR programs also often drop spaces around 'f' or 'j'. Fixing all these is difficult,
 		# but we can be sure no English words start with any character followed by "fj".
 		$subs[$s] =~ s/(^|\s|[.-…"“])(\w)fj/$1$2f j/gm;
@@ -557,10 +563,25 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 		$subs[$s] =~ s/([A-Z]{2,})l/$1I/gm;  # at end or inside, preceded by at least two capitals
 		$subs[$s] =~ s/([A-Z])l([A-Z])/$1I$2/gm;  # in between two capitals
 
+		# Dollar sign amidst caps is likely an S.
+		$subs[$s] =~ s/(^|\s|\[|\(|-)\$([A-Z])/$1I$2/gm;  # at start of word
+		$subs[$s] =~ s/([A-Z]{3,})\$/$1S/gm;  # at end or inside, but avoid messing up US$
+		$subs[$s] =~ s/([A-Z])\$([A-Z])/$1S$2/gm;  # in between two capitals
+
 		# Fix spurious spaces after '1' in numbers (this will probably mess up a few cases
 		# where the space was intended, but most often by far it is an error).
 		$subs[$s] =~ s/1 (\d+|[.,:])/1$1/gm;
 		$subs[$s] =~ s/1 (\d+|[.,:])/1$1/gm; # Do this twice because the \d may also have been a 1.
+
+		# AFAIK "vv" does not occur in English and is likely a "w".
+		$subs[$s] =~ s/VV/W/g;
+		$subs[$s] =~ s/vv/w/g;
+
+		# Consecutive dots sometimes lump together into _
+		$subs[$s] =~ s/(_\.|\._)/.../g;
+		# Ellipsis followed by spurious period
+		$subs[$s] =~ s/(\.\.\.|…)\s+\.($|\s)/$1/gm;
+
 		if($subs[$s] ne $orig) {
 			$ocrFixes++;
 			print STDERR "OCR corrected: $subs[$s]\n" if($bVerbose);
@@ -568,13 +589,25 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 	}
 	if($bNukeHA) {
 		# Remove simple hearing-impaired annotations like "(CLEARS THROAT)" or "[NOISE]"
-		$subs[$s] =~ s/\([A-Z0-9 ,.\-'"\&\n]+?\)//g;
-		$subs[$s] =~ s/\[[A-Z0-9 ,.\-'"\&\n]+?\]//g;
-		if($bNukeHarder) { # Case insensitive and more varied formatting
-			$subs[$s] =~ s/-? ?\([A-Z0-9 ,.!\-'"\&\/\n]+?\)//gi;
-			$subs[$s] =~ s/-? ?\[[A-Z0-9 ,.!\-'"\&\/\n]+?\]//gi;
+		$subs[$s] =~ s/\([A-Z0-9 ,.\-'"\&\n♪]+?\) ?//g;
+		$subs[$s] =~ s/\[[A-Z0-9 ,.\-'"\&\n♪]+?\] ?//g;
+		if($bNukeHarder) {  # Case insensitive and more varied formatting
+			# Things like:
+			# (something happens)
+			# - (something happens)
+			# (Someone) Says something.
+			# - (Someone) Says something.
+			# - (Some1) This might also occur  - (Some2) So, don't enforce hyphen at start of line.
+			# [Or the same with square brackets.]
+			# => Wipe the bracketed text, and drop lines that only have a hyphen left.
+			$subs[$s] =~ s/(-? ?)\([A-Z0-9 ,.!\-'"\&\/\n♪]+?\) */$1/gi;
+			$subs[$s] =~ s/(-? ?)\[[A-Z0-9 ,.!\-'"\&\/\n♪]+?\] */$1/gi;
+			$subs[$s] =~ s/^\s*-\s*$//mg;
+			$subs[$s] =~ s/^\s(\S)/$1/mg;
 			# "Name: Text" on new line, should therefore become "- Text"
 			$subs[$s] =~ s/^[A-Z0-9 '"#]+?: /- /mgi;
+			# … unless it's the only person saying something in this subtitle.
+			$subs[$s] =~ s/^- // if($subs[$s] =~ /^- ([^\n]+($|\n[^-]))+$/);
 			# This has a high risk of affecting regular lines, therefore keep it case sensitive. TODO: improve
 			$subs[$s] =~ s/[A-Z0-9 '"#]+?: *$//mg;
 			$subs[$s] =~ s/^-[A-Z0-9 '"#]+?: /- /mgi;
@@ -584,8 +617,11 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 			# "NAME: Text" on new line, should therefore become "- Text"
 			$subs[$s] =~ s/^[A-Z0-9 '"#]+?: /- /mg;
 			$subs[$s] =~ s/[A-Z0-9 '"#]+?:[ \n]//g;
+			# … unless it's the only person saying something in this subtitle.
+			$subs[$s] =~ s/^- // if($subs[$s] =~ /^- ([^\n]+($|\n[^-]))+$/);
 		}
-		$subs[$s] =~ s/^\n+([^\n])/$1/g; # Remove trailing empty lines
+		$subs[$s] =~ s/^\n+([^\n])/$1/g;  # Remove leading empty lines
+		$subs[$s] =~ s/\n\n+$/\n/;  # Remove trailing empty lines
 	}
 	if($bNukeURLs) {
 		# These atrocious regexes should catch most common URLs, at least they did when I tweaked them long ago.
@@ -601,7 +637,7 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 		$subs[$s] =~ s/[ \t]+$//mg;
 	}
 
-	if( $bClean && $subs[$s] =~ /^(<.>\n*<\/.>)?\n*$/ ) { # -c: Skip if empty
+	if( $bClean && $subs[$s] =~ /^(<.>\n*<\/.>)?\n*$/ ) {  # -c: Skip if empty
 		$nCleaned++;
 		next;
 	}
