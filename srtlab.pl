@@ -13,7 +13,7 @@
 #   better encoding detection; [Idiomdrottning] whitespace removal, -HH tweaks.
 # Version 0.98 (2017/09): rudimentary OCR error fix option
 # Version 0.99 (2021/06): added -J option, fixed incorrect ordering in -i, -j
-# Version 0.991 (WIP): added -d, -A, -B, -x, and -k options.
+# Version 1.0  (2022/08): added -d, -A, -B, -x, and -k options.
 #   Ignore style tags for -l and -L.
 #   OCR fixing and HI annotation removal improvements.
 #
@@ -38,9 +38,11 @@ use utf8;
 use Encode qw(decode encode);
 use Encode::Guess;
 
-my $VERSION = '0.991';
+my $VERSION = '1.0';
 
 # TODO: allow the user to override input encoding detection, or to configure it.
+# TODO: option to remove lyrics (often indicated by # or ♪). Not that trivial because
+#   the same subtitle may contain both lyrics and speech.
 # TODO: further improve -HH to remove more variants without breaking regular dialogue.
 # For instance: "one purpose, and one purpose only:\n\n" risks losing everything after
 #   the comma if we would merely look for case insensitive [A-Z ]:.
@@ -87,11 +89,9 @@ my $VERSION = '0.991';
 # Similarly, too long subs could be split up (although those mostly stem from
 #  hopelessly poor translation anyway)
 #
-# Repair typical OCR errors. Many of the typical mistakes can be corrected
-#  automatically with reasonable confidence (for instance “l'm a bad OCR program
-#  and l like the letter L”). For this to work really reliably though, it would
-#  need to be tied to a spell checker and perhaps even a language model, so this
-#  is not trivial. This is a prerequisite to make -H work reliably.
+# Further improve OCR error correction. For this to work really reliably, it
+#  would need to be tied to a spell checker and perhaps even a language model,
+#  so this is not trivial.
 #
 # Automatic syncing of a subtitle file given another file with correct sync
 #  (e.g. in another language or a worthless translation with good sync):

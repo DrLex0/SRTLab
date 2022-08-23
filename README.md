@@ -1,50 +1,90 @@
 # SRTLab
-*SubRip subtitle file converter*<br>
+*SubRip subtitle file converter*
+
 by Alexander Thomas, aka Dr. Lex (with contributions by Idiomdrottning)<br>
-Current version: 0.991 (work in progress)<br>
-Contact: visit https://www.dr-lex.be/lexmail.html<br>
+Current version: **1.0**<br>
+Contact: use the mail page at <https://www.dr-lex.be/><br>
 &nbsp;&nbsp;&nbsp;&nbsp;or use my gmail address "doctor.lex".
 
 
 ## What is it?
-This is a Perl script that can perform certain operations on SubRip (.srt) subtitle files. For instance, it can scale and offset the time stamps of all subtitles based on pairs of current and expected time values. It can also check files for subtitles that appear too briefly or overly long, and attempt to fix subs that appear too briefly (which is of course not always possible), as well as remove overlap between subtitles. It also has routines that attempt to remove annotations for the hearing impaired, if you want to convert such file to one with only dialog text. There is also a rudimentary fix for typical OCR errors in English subtitles.
+This is a Perl script that can perform certain operations on SubRip (.srt) subtitle files. For instance, it can:
+* scale and offset the time stamps of all subtitles based on pairs of current and expected time values;
+* check files for subtitles that appear too briefly or overly long, and attempt to fix subs that appear too briefly (which is of course not always possible), while also removing overlap between subtitles;
+* attempt to remove annotations for the hearing impaired, if you want to convert such file to one with only dialog text;
+* fix many typical OCR errors in subtitles (English or similar languages);
+* …
 
-It is a bit of a work in progress and I plan to add some more features, but I released it to the public since it is already useful in its current form.
+After being stuck in versions 0.9x for ages, I decided this is mature enough to release as version 1.0.
+
 
 ## Installing
 Put it anywhere in a place that is in your executable PATH. Or always run it by specifying its full path.
 
+
 ## Usage
-To get extended help, run the script with the switch '-h'.
+To get extended help, run the script with the switch `-h`.
 
 The normal mode of operation is to run the script as:<br>
 `srtlab.pl input.srt > output.srt`<br>
 Which uses the standard redirect mechanism to write the output to a file. When running the script without the '>' part, it will simply print output on the console.
 
-BEWARE: do not try this:<br>
+*BEWARE:* do not try this:<br>
 `srtlab.pl input.srt > input.srt`<br>
 This will destroy input.srt and leave you with an empty file. If you want to overwrite the input directly, instead run the script as follows and be aware that you will not be able to fix any mistakes you made unless you have a back-up of the file:
 `srtlab -e input.srt`
 
-Multiple files can be joined by passing additional file arguments. This assumes the files are sequential, hence if an offset is required per file, it must already have been applied.<br>
-It is also possible to inject subtitles from a file based on their timestamps with the `-J` option. There is no sequentiality requirement for this method, but you should still ensure that the injected subtitles do not overlap with existing ones.
+Multiple files can be **joined** by passing additional file arguments. This assumes the files are sequential, hence if an offset is required per file, it must already have been applied.<br>
+It is also possible to **inject subtitles** from a file based on their timestamps with the `-J` option. There is no sequentiality requirement for this method, but you should still ensure that the injected subtitles do not overlap with existing ones.
 
-The -L option can only fix too short subtitles if there is enough empty time after them. Otherwise more manual work will be required to fix the poorly made subtitle file. This option does not shorten 'sticky' subtitles (i.e. that appear too long) because these can sometimes be intentional. You should check the reported sticky subs yourself and fix them if necessary. In case of overlapping subtitles, -L will cut off the first subtitle in an overlapping pair at the time where the second one starts.
+The `-L` option can only **fix too short subtitles** if there is enough empty time after them. Otherwise more manual work will be required to fix the poorly made subtitle file. This option does not shorten 'sticky' subtitles (i.e., that appear too long) because these can sometimes be intentional. You should check the reported sticky subs yourself and fix them if necessary. In case of overlapping subtitles, `-L` will cut off the first subtitle in an overlapping pair at the time where the second one starts.
 
-The -H switch will cause the script to remove the most common non-verbal annotations in subtitles for the hearing impaired (like [CLEARS THROAT] and character names). This can be useful for people with normal hearing who want to play a film silently without missing out on any of the dialogue, or if you want to prepare a subtitle file for translation. You should combine -H with -c. If you provide the -H switch twice, it will try a wider range of patterns to strip non-dialogue subtitles. You should only use this if a single -H does not work satisfactorily, because -HH has a higher risk of damaging parts of dialogue.<br>
-For instance, the regular -H will not work well if the file has been made with the kind of bad but popular OCR tool that believes every capital I is a lowercase L. In that case your best option is to go through the file and correct all those ‘I’s before running it through SRTLab, but the quickest option is just to use -HH.
+The `-H` switch will cause the script to **remove the most common non-verbal annotations** in subtitles for the hearing impaired (like `[CLEARS THROAT]` and character names). This can be useful for people with normal hearing who want to play a film silently without missing out on any of the dialogue, or if you want to prepare a subtitle file for translation. You should combine `-H` with `-c` and preferably also `-w`.<br>
+If you provide the `-H` switch twice, it will try a wider range of patterns to strip non-dialogue subtitles. You should only use this if a single `-H` does not work satisfactorily, because `-HH` has a higher risk of damaging parts of dialogue.<br>
+For instance, the regular `-H` will not work well if the file has been made with the kind of bad but popular OCR tool that believes every capital I is a lowercase L. Before resorting to the `-HH` option in this case, first try to enable `-f` as well.
 
-If the file was generated by OCR (optical character recognition), it is probably a good idea to enable the '-f' option, especially if you want to use the -H option. Fixing the OCR does not only correct some annoying errors, it can make the -H option work more reliably as well.
+The `-f` option will try to **fix many of the typical OCR (optical character recognition) errors** in languages that are similar to English. If the file was generated by OCR, it is usually always a good idea to enable the `-f` option. Not only does this correct some annoying errors, as stated above it can also make the `-H` option work more reliably.
+
+
+### Typical usage example
 
 A recommended invocation to get a clean file with only dialogue, is:<br>
-`srtlab -vLcufHUw`  
-Add another H if the single one doesn't cut it.  
-If you know the file is free of OCR errors, you may omit 'f' to avoid any risk of over-correcting supposed errors.
+```bash
+srtlab -vLcufHUw
+```
+Add another `H` if the single one doesn't cut it, but do not make this a habit. (Omit the `H` altogether if the source file is certain not to contain any hearing impaired annotations.)<br>
+If you know the file is free of OCR errors, you should omit the `f` to avoid risk of over-correcting supposed errors.
+
+
+### Encodings
 
 At this time the script will only work with UTF-8, UTF-16, Windows Latin 1, or Shift-JIS encoded files. It can detect UTF-x files both with and without a starting Unicode BOM character. If you have files in other encodings, you will either need to convert them to a known encoding first (UTF-8 recommended), or modify the last lines of the script to recognise those encodings. My advice is to write all your output srt files in Unicode unless your media player does not support it. The 8-bit encodings are a thing of the past.
 
+
+### Advanced usage
+
+If you have a subtitle file whose time stamps have an unknown offset and scale w.r.t. your video file, you can either try to use the `-a` or `-A` options.<br>
+The `-a` option requires two pairs of time stamps in respectively the SRT file and the actual movie to be given on the command line. It is best to take one pair at the start of the movie and one at the end.<br>
+Example:
+```bash
+srtlab -a 00:00:15,075 00:00:12,443 01:19:18,536 01:22:38,494 input.srt > output.srt
+```
+The `-A` option takes this a bit further and can read any number of time stamp pairs from a text file given as argument, and it will then calculate an optimal offset and scale from this, even if there is jitter on the measurements. The more pairs you can provide, the better (the pairs can be in any order). This requires a bit more work but is the best way to do it.<br>
+An example of such input file:
+```
+00:00:15,075 00:00:12,443
+01:19:18,536 01:22:38,494
+00:53:44,607 00:55:58,948
+00:28:03,051 00:29:11,761
+```
+
+In general however, if you need to resort to these options, you will often notice that you are actually dealing with subtitles for different releases of the movie where scenes have been cut or added, and you would need to chop up the subtitle file into parts in between the cuts, and then scale and offset each part separately and re-join the parts. You might first want to look for a better matching subtitle file before going down this rabbit hole.
+
+
 ## Note to developers
-The code uses 'tab indenting'. The rule is very simple: one code indent level == one tab, and this is the *only* thing tabs may be used for. For any other whitespace formatting, use spaces. This makes it trivial to adjust indent width in any editor that has configurable tab width. If you edit the code and want to make a pull request, please try to follow this convention. Also, even though this *is* Perl, please try not to create ‘write-only’ code.
+The code uses “tab indenting.” The rule is very simple: one code indent level == one tab, and this is the *only* thing tabs may be used for. For any other whitespace formatting, use spaces. This makes it trivial to adjust indent width in any editor that has configurable tab width. If you edit the code and want to make a pull request, please try to follow this convention.<br>
+Also, even though this *is* Perl, please try not to create ‘write-only’ code.
+
 
 ## License
 This program is released under the GNU General Public License. See the source file and COPYING for more details.
