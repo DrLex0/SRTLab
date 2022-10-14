@@ -16,8 +16,10 @@
 # Version 1.0  (2022/08): added -d, -A, -B, -x, and -k options.
 #   Ignore style tags for -l and -L.
 #   OCR fixing and HI annotation removal improvements.
+# Version 1.1  (WIP): require repeating -f to enable corrections that might
+#   over-correct certain words.
 #
-# Copyright (C) 2021  Alexander Thomas & Idiomdrottning
+# Copyright (C) 2022  Alexander Thomas & Idiomdrottning
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,7 +40,7 @@ use utf8;
 use Encode qw(decode encode);
 use Encode::Guess;
 
-my $VERSION = '1.0';
+my $VERSION = '1.1a';
 
 # TODO: allow the user to override input encoding detection, or to configure it.
 # TODO: option to remove lyrics (often indicated by # or ♪). Not that trivial because
@@ -126,7 +128,8 @@ my ($encodingIn,$encodingOut);
 my $LE = "\n";
 my ($bAuto,$bVerbose,$bClean,$bHasBOM);
 my $tSaveBOM = -1;
-my ($bCheckLength,$bFixLength,$bInPlace,$bTextOnly,$bNukeHA,$bNukeHarder,$bNukeURLs,$bWhitespace,$bFixOCR,$bStyle);
+my ($bCheckLength,$bFixLength,$bInPlace,$bTextOnly,$bNukeHA,$bNukeHarder,$bNukeURLs,$bWhitespace,$bStyle);
+my $fixOCR = 0;
 my ($autoLsq, $autoAvg);
 my @insertInd;  # for -i
 my @inserTime;  # for -j and -J. Floating-point numbers.
@@ -173,7 +176,8 @@ Options:
   -J file.srt: insert subtitles from the given SRT file, using their timestamps
     relative to the original times of the other input files.
   -f: try to fix common OCR errors (tuned for English only). This may help to
-    obtain a better result with -H.
+    obtain a better result with -H. Repeat this option to enable more
+    corrections that might erroneously modify some uncommonly used words.
   -H: attempt to remove typical non-verbal annotations in subs for the hearing
     impaired, e.g., (CLEARS THROAT).  You should combine this with -c.
     Repeat -H to try to remove non-capitalized annotations (mind that this has
@@ -323,7 +327,7 @@ while( $#ARGV >= 0 ) {
 			elsif( $sw eq 'M' ) { $tSaveBOM = 0; }
 			elsif( $sw eq 'e' ) { $bInPlace = 1; }
 			elsif( $sw eq 't' ) { $bTextOnly = 1; }
-			elsif( $sw eq 'f' ) { $bFixOCR = 1; }
+			elsif( $sw eq 'f' ) { $fixOCR++; }
 			elsif( $sw eq 'H' ) {
 				if($bNukeHA) {
 					$bNukeHarder = 1;
@@ -540,12 +544,15 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 		$subs[$s] =~ s/^[ \t]+//mg;
 		$subs[$s] =~ s/[ \t]+$//mg;
 	}
-	if($bFixOCR) {
+	if($fixOCR) {
 		# Fix obvious OCR errors, only for English at the moment. This is just a bunch of
 		# ugly heuristics, there are better ways to do this, but it's a lot better than nothing.
 		# Many of these errors are caused by the dumb idea of making 'l' and 'I' look
 		# identical in sans-serif fonts, and the lack of smartness in OCR programs.
+		# The order in which these corrections are applied is important. Some depend on a previous
+		# correction having been applied. 
 		my $orig = $subs[$s];
+		my $corrLevel = '';
 
 		# \/ is usually a broken V (or part of a broken W)
 		$subs[$s] =~ s/\\\//V/g;
@@ -557,7 +564,7 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 		# Take care not to break e.g. "nice-looking", so don't just assume '-' marks a new word.
 		$subs[$s] =~ s/(^-?|\s-?|[.…"“])l([ '’.,\?!fnst]|ll|$)/$1I$2/gm;
 		# OCR programs also often drop spaces around 'f' or 'j'. Fixing all these is difficult,
-		# but we can be sure no English words start with any character followed by "fj".
+		# but it is safe to assume no English words start with any character followed by "fj".
 		$subs[$s] =~ s/(^|\s|[.-…"“])(\w)fj/$1$2f j/gm;
 
 		# Fix capital 'I' in all-caps word (why do OCR programs keep making this obvious mistake?)
@@ -575,9 +582,14 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 		$subs[$s] =~ s/1 (\d+|[.,:])/1$1/gm;
 		$subs[$s] =~ s/1 (\d+|[.,:])/1$1/gm; # Do this twice because the \d may also have been a 1.
 
-		# AFAIK "vv" does not occur in English and is likely a "w".
-		$subs[$s] =~ s/VV/W/g;
-		$subs[$s] =~ s/vv/w/g;
+		# "vv" does occur in English (e.g., savvy) but is rather rare and in most cases it is
+		# simply a poorly recognized "w".
+		if($fixOCR > 1) {
+			my $orig2 = $subs[$s];
+			$subs[$s] =~ s/VV/W/g;
+			$subs[$s] =~ s/vv/w/g;
+			$corrLevel = ' (ff)' if($orig2 ne $subs[$s]);
+		}
 
 		# Consecutive dots sometimes lump together into _
 		$subs[$s] =~ s/(_\.|\._)/.../g;
@@ -586,7 +598,7 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 
 		if($subs[$s] ne $orig) {
 			$ocrFixes++;
-			print STDERR "OCR corrected: $subs[$s]\n" if($bVerbose);
+			print STDERR "OCR corrected${corrLevel}: $subs[$s]\n" if($bVerbose);
 		}
 	}
 	if($bNukeHA) {
