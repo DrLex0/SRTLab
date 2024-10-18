@@ -194,7 +194,7 @@ Options:
     option is not enabled, any existing CR will be obliterated.
   -u: save output in UTF-8.
   -U: erase all subtitles that have a URL in them (should combine with -c).
-  -w: Strip whitespace from beginning and end of lines
+  -w: Strip whitespace from beginning and end of lines.
   -t: strip all SRT formatting and only output the text.
   -v: verbose mode.
   -V: print version and exit.
@@ -634,8 +634,10 @@ for( my $s=0; $s<=$#subs; $s++ ) {
 			# … unless it's the only person saying something in this subtitle.
 			$subs[$s] =~ s/^- // if($subs[$s] =~ /^- ([^\n]+($|\n[^-]))+$/);
 		}
+		$subs[$s] =~ s/^- *$//mg;
 		$subs[$s] =~ s/^\n+([^\n])/$1/g;  # Remove leading empty lines
 		$subs[$s] =~ s/\n\n+$/\n/;  # Remove trailing empty lines
+		$subs[$s] =~ s/^- *([^\n]+)$/$1/;  # Remove dash prefix if only 1 line remains
 	}
 	if($bNukeURLs) {
 		# These atrocious regexes should catch most common URLs, at least they did when I tweaked them long ago.
